@@ -1,4 +1,4 @@
-# flutter_projects
+# flutter_projects / part-time-connect
 
 A new Flutter project.
 

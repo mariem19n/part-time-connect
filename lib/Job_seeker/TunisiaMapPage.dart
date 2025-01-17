@@ -45,7 +45,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                       return ListTile(
                         title: Text(address), // Show the formatted address
                         trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: Icon(Icons.delete, color: Color(0xFF4B5320)),
                           onPressed: () {
                             setState(() {
                               preferredLocations.removeAt(i); // Remove the location
@@ -78,7 +78,10 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                   showConfirmationDialog(); // Reopen the dialog after adding
                 }
               },
-              child: Text("Add Location"),
+              child: Text(
+                "Add Location",
+                style: TextStyle(color: Color(0xFF4B5320)),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -88,7 +91,10 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                   //MaterialPageRoute(builder: (context) => NextPage()),
                 //);
               },
-              child: Text("Confirm"),
+              child: Text(
+                "Confirm",
+                style: TextStyle(color: Color(0xFF4B5320)),
+              ),
             ),
           ],
         );
@@ -140,7 +146,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                       height: 80.0,
                       child: Icon(
                         Icons.location_on,
-                        color: Colors.red,
+                        color: Color(0xFF4B5320),
                         size: 40,
                       ),
                     );

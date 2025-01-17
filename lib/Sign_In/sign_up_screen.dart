@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projects/Log_In/welcome_screen.dart';
-<<<<<<< HEAD
 import 'package:flutter_projects/Log_In/RegistrationScreen.dart';
-=======
->>>>>>> d96eec04a536b740a948059e2c06e3d8a85346a3
+
 
 class SignInPage extends StatefulWidget {
   @override
@@ -132,11 +130,8 @@ class _SignInPageState extends State<SignInPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-<<<<<<< HEAD
                                 builder: (context) => RegistrationScreen()),
-=======
                                 builder: (context) => WelcomeScreen()),
->>>>>>> d96eec04a536b740a948059e2c06e3d8a85346a3
                           );
                         },
                         child: Text(

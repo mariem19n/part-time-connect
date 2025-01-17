@@ -123,7 +123,7 @@ class SecondWelcomeScreen extends StatelessWidget {
                           // Navigate to the sign-up page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignUpPage()),
+                            MaterialPageRoute(builder: (context) => SignInPage()),
                           );
                         },
                         style: ButtonStyle(

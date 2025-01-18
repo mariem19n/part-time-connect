@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projects/Job_seeker/HomePage.dart';
 import 'package:flutter_projects/Log_In/welcome_screen.dart';
 import 'package:flutter_projects/Log_In/RegistrationScreen.dart';
 
@@ -131,7 +132,6 @@ class _SignInPageState extends State<SignInPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => RegistrationScreen()),
-                                builder: (context) => WelcomeScreen()),
                           );
                         },
                         child: Text(
@@ -155,7 +155,11 @@ class _SignInPageState extends State<SignInPage> {
 
                         // Mock database validation (replace with real validation)
                         if (email == 'contact@techsolutions.com' && password == 'password123') {
-                          Navigator.pushNamed(context, '/homePage'); // Navigate to home page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HomePage()),
+                          );
                         } else {
                           // Show error message at the top with green color
                           ScaffoldMessenger.of(context).showSnackBar(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
+import 'HomePage.dart';
 class TunisiaMapPage extends StatefulWidget {
   @override
   _TunisiaMapPageState createState() => _TunisiaMapPageState();
@@ -84,11 +85,11 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to the next page after confirmation
-                //Navigator.push(
-                  //context,
-                  //MaterialPageRoute(builder: (context) => NextPage()),
-                //);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => HomePage()),
+                );
               },
               child: Text(
                 "Confirm",

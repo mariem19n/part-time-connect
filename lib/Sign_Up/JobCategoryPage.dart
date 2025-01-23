@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../Job_seeker/WorkLocationPage.dart'; // Replace with your actual file name
-import '../recruiter_interface.dart'; // Replace with your actual file name
+import 'package:flutter_projects/Job_seeker/WorkLocationPage.dart';
+import 'package:flutter_projects/recruiter_interface.dart';
 
 class JobCategoryPage extends StatelessWidget {
   @override

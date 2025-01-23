@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'Log_In/welcome_screen.dart'; // Import the HomePage widget
+import 'Sign_Up//welcome_screen.dart'; // Import the HomePage widget
 
 class SplashScreen extends StatefulWidget {
   @override

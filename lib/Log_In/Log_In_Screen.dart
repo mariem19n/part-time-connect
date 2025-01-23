@@ -1,44 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projects/Job_seeker/HomePage.dart';
-import 'package:flutter_projects/Log_In/welcome_screen.dart';
-import 'package:flutter_projects/Log_In/RegistrationScreen.dart';
+import 'package:flutter_projects/Sign_Up/RegistrationScreen.dart';
+import 'Forgot Password Dialog (Email Input).dart';
 
-
-class SignInPage extends StatefulWidget {
+class LogInPage extends StatefulWidget {
   @override
-  _SignInPageState createState() => _SignInPageState();
+  _LogInPageState createState() => _LogInPageState();
 }
 
-class _SignInPageState extends State<SignInPage> {
-  bool _obscureText = true; // Declare the obscureText variable to control the visibility of the password
+class _LogInPageState extends State<LogInPage> {
+  bool _obscureText = true;
+  bool _showForgotPassword = false;
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  void validateLogin() {
+    String email = emailController.text;
+    String password = passwordController.text;
+
+    if (email == 'contact@techsolutions.com' && password == 'password123') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } else {
+      setState(() {
+        _showForgotPassword = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid email or password.'),
+          backgroundColor: Color(0xFF4B5320),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 50),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // Prevent screen resizing when keyboard appears
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Quarter-circle green background in the bottom-right corner
           Align(
             alignment: Alignment.bottomRight,
             child: ClipPath(
               clipper: QuarterCircleClipper(),
               child: Container(
-                color: Color(0xFFB7C9A3), // Light green shade
+                color: Color(0xFFB7C9A3),
                 width: 420,
                 height: 400,
                 child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 100,
-                    left: 50,
-                  ),
+                  padding: const EdgeInsets.only(top: 100, left: 50),
                   child: Center(
                     child: Image.asset(
-                      'assets/images/part_time_connect_logo.png', // Replace with your logo path
-                      height: 300, // Adjusted size
+                      'assets/images/part_time_connect_logo.png',
+                      height: 300,
                       width: 300,
                     ),
                   ),
@@ -46,16 +67,15 @@ class _SignInPageState extends State<SignInPage> {
               ),
             ),
           ),
-          // Form inputs and buttons
           SafeArea(
-            child: SingleChildScrollView( // Make the content scrollable
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center, // Left align the content
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 50), // Adjust spacing from the top
+                  SizedBox(height: 50),
                   Text(
-                    'Sign Up',
+                    'Log In',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
@@ -69,10 +89,10 @@ class _SignInPageState extends State<SignInPage> {
                     controller: emailController,
                     decoration: InputDecoration(
                       labelText: 'Professional Email Address',
-                      labelStyle: TextStyle(color: Color(0xFF4B5320)), // Set label color to green
+                      labelStyle: TextStyle(color: Color(0xFF4B5320)),
                       prefixIcon: Icon(
                         Icons.email,
-                        color: Color(0xFF4B5320), // Email icon color
+                        color: Color(0xFF4B5320),
                       ),
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
@@ -87,22 +107,22 @@ class _SignInPageState extends State<SignInPage> {
                   // Password input
                   TextField(
                     controller: passwordController,
-                    obscureText: _obscureText, // Use the state variable to control visibility
+                    obscureText: _obscureText,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      labelStyle: TextStyle(color: Color(0xFF4B5320)), // Set label color to green
+                      labelStyle: TextStyle(color: Color(0xFF4B5320)),
                       prefixIcon: Icon(
                         Icons.lock,
-                        color: Color(0xFF4B5320), // Lock icon color
+                        color: Color(0xFF4B5320),
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureText ? Icons.visibility_off : Icons.visibility,
-                          color: Color(0xFF4B5320), // Eye icon color
+                          color: Color(0xFF4B5320),
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscureText = !_obscureText; // Toggle the visibility
+                            _obscureText = !_obscureText;
                           });
                         },
                       ),
@@ -116,16 +136,10 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  // Log in link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
-                      ),
+                      Text("Don't have an account? "),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -135,7 +149,7 @@ class _SignInPageState extends State<SignInPage> {
                           );
                         },
                         child: Text(
-                          "Log in",
+                          "Sign Up",
                           style: TextStyle(
                             color: Color(0xFF4B5320),
                             decoration: TextDecoration.underline,
@@ -145,47 +159,48 @@ class _SignInPageState extends State<SignInPage> {
                     ],
                   ),
                   SizedBox(height: 30),
-                  // Continue button aligned to the right
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        String email = emailController.text;
-                        String password = passwordController.text;
-
-                        // Mock database validation (replace with real validation)
-                        if (email == 'contact@techsolutions.com' && password == 'password123') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomePage()),
-                          );
-                        } else {
-                          // Show error message at the top with green color
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Invalid email or password.'),
-                              backgroundColor: Color(0xFF4B5320), // Green color
-                              behavior: SnackBarBehavior.floating, // To make it float above content
-                              margin: EdgeInsets.only(top: 50),
-                            ),
-                          );
-                        }
-                      },
-                      child: Text('Continue'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Color(0xFF4B5320),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 15,
-                        ),
-                        side: BorderSide(
-                          color: Color(0xFF4B5320),
-                          width: 2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute buttons to opposite sides
+                    children: [
+                      ElevatedButton(
+                        onPressed: validateLogin, // Use validateLogin function
+                        child: Text('Continue'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Color(0xFF4B5320),
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          side: BorderSide(
+                            color: Color(0xFF4B5320),
+                            width: 2,
+                          ),
                         ),
                       ),
-                    ),
+                      if (_showForgotPassword)
+                        TextButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ForgotPasswordDialog(),
+                            );
+                          },
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: Colors.white, // Text color
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Color(0xFF4B5320), // Button background color
+                            foregroundColor: Colors.white, // Text color
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), // Padding
+                            side: BorderSide(
+                              color: Color(0xFF4B5320), // Border color
+                              width: 2, // Border width
+                            ),
+
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -216,3 +231,4 @@ class QuarterCircleClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
+

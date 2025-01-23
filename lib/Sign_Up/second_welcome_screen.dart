@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../Sign_In/sign_up_screen.dart'; // Adjust the path to where your SignUpPage class is defined
 import 'JobCategoryPage.dart';
+import 'package:flutter_projects/Log_In/Log_In_Screen.dart';
 class SecondWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -123,7 +123,7 @@ class SecondWelcomeScreen extends StatelessWidget {
                           // Navigate to the sign-up page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignInPage()),
+                            MaterialPageRoute(builder: (context) => LogInPage()),
                           );
                         },
                         style: ButtonStyle(

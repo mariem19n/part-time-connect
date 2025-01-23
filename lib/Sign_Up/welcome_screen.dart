@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'second_welcome_screen.dart'; // Import the second screen
-import '../Sign_In/sign_up_screen.dart';
+import 'package:flutter_projects/Log_In/Log_In_Screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -110,7 +110,7 @@ class WelcomeScreen extends StatelessWidget {
                               // Navigate to the sign-up page
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => SignInPage()),
+                                MaterialPageRoute(builder: (context) => LogInPage()),
                               );
                             },
                             style: ButtonStyle(

@@ -54,16 +54,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-
-        title: const Text(
-          'Hi! Let\'s get you registered.',
-          style: TextStyle(
-              color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -71,6 +61,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 40), // Added spacing at the top
+              const Text(
+                'Hi! Let\'s get you registered.',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10), // Spacing between texts
               const Text(
                 'Please provide the following details.',
                 style: TextStyle(fontSize: 14, color: Colors.black54),
@@ -165,15 +165,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 },
               ),
 
-
-
               const SizedBox(height: 16),
               PasswordField(controller: _passwordController),
-
-
-
-
-
 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

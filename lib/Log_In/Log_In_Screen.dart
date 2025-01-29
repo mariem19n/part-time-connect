@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projects/Job_seeker/HomePage.dart';
-import 'package:flutter_projects/Sign_Up/RegistrationScreen.dart';
+import 'package:flutter_projects/Job_seeker/RegistrationScreen.dart';
 import 'Forgot Password Dialog (Email Input).dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -14,9 +14,9 @@ class _LogInPageState extends State<LogInPage> {
   bool _obscureText = true;
   bool _showForgotPassword = false;
 
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  ///////////////////////////////////////////////////
+
   void validateLogin() async {
     String username = usernameController.text;
     String password = passwordController.text;
@@ -57,8 +57,6 @@ class _LogInPageState extends State<LogInPage> {
       ));
     }
   }
-
-////////////////////////////////////////////////////////
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +104,7 @@ class _LogInPageState extends State<LogInPage> {
                   SizedBox(height: 20),
                   // Email input
                   TextField(
-                    controller: emailController,
+                    controller: usernameController,
                     decoration: InputDecoration(
                       labelText: 'Professional Email Address',
                       labelStyle: TextStyle(color: Color(0xFF4B5320)),

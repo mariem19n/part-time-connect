@@ -108,17 +108,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Hi! Let’s get you registered.'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -127,6 +116,16 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 40), // Added spacing at the top
+                Text(
+                  'Hi! Let’s get you registered.', // Ajout du texte ici
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 20), // Espacement entre le texte et le formulaire
                 TextFormField(
                   controller: _companyNameController,
                   decoration: InputDecoration(

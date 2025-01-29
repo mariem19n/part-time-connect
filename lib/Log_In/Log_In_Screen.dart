@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projects/Job_seeker/HomePage.dart';
 import 'package:flutter_projects/Sign_Up/RegistrationScreen.dart';
 import 'Forgot Password Dialog (Email Input).dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LogInPage extends StatefulWidget {
   @override
@@ -14,31 +16,49 @@ class _LogInPageState extends State<LogInPage> {
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  void validateLogin() {
-    String email = emailController.text;
+  ///////////////////////////////////////////////////
+  void validateLogin() async {
+    String username = usernameController.text;
     String password = passwordController.text;
 
-    if (email == 'contact@techsolutions.com' && password == 'password123') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/login/'),  // Ensure this URL is correct in your Django API
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'username': username, 'password': password}),
       );
-    } else {
-      setState(() {
-        _showForgotPassword = true;
-      });
+      print(response.statusCode);
+      print(response.body);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invalid email or password.'),
-          backgroundColor: Color(0xFF4B5320),
-          behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(top: 50),
-        ),
-      );
+
+      if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(responseBody['message']),
+          backgroundColor: Colors.green,
+        ));
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+
+      } else {
+        final responseBody = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(responseBody['error'] ?? 'An error occurred. Please try again later.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to connect to the server. Please try again later.'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
+
+////////////////////////////////////////////////////////
 
   @override
   Widget build(BuildContext context) {

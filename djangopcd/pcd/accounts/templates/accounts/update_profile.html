@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Profile</title>
+</head>
+<body>
+    <h1>Update Profile</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        <h3>Reset Username</h3>
+        <label for="id_username">New Username:</label>
+        <input type="text" id="id_username" name="username" value="{{ user.username }}">
+        <br><br>
+    
+        <h3>Reset Password</h3>
+        <label for="password">OldPassword:</label>
+        <input type="password" name="password" id="password">
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" >
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password">
+
+        
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
+

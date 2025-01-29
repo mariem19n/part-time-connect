@@ -26,12 +26,13 @@ def home(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
+    path('api/', include('accounts.urls')),
     path('', home, name='home'), #ken theb tzthal fl page home 
     # path('', RedirectView.as_view(url='/login/', permanent=False), name='root'), ken theb tethal lpage f login toul
-    path('register/', views.registerPage , name='register'),
-    path('login/',views.loginPage,name="login"),
-    path('logout/',views.logoutUser,name="logout"),
+    # path('register/', views.registerPage , name='register'),
+    # path('login/',views.loginPage,name="login"),
+    # path('logout/',views.logoutUser,name="logout"),
     path('api/', include('api.urls')),
+    # path('update-profile/', views.updateProfile, name='update-profile'),
 
 ]

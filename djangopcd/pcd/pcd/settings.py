@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-s3rc=h@0h@_*c-0a@f_to)elc&j0t8&dhjr$a$h=fv1_j=v@j2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 
 # Application definition
@@ -40,10 +40,11 @@ INSTALLED_APPS = [
     'accounts',
     'api',
     'rest_framework',
-    # 'corsheaders',
+    'corsheaders', 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -125,3 +126,28 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CORS_ALLOWED_ORIGINS = [ 
+# 'http://10.0.2.2:8000',  # Adresse pour accéder  à localhost depuis l'émulateur 
+# ] 
+
+CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://10.0.2.2:8000'  # Adresse pour l'émulateur Android
+]
+
+
+# Si tu n'utilises pas de CSRF pour tes APIs, tu peux ajouter ceci :
+CSRF_COOKIE_HTTPONLY = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+}
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

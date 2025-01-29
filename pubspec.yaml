@@ -7,12 +7,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.2
   multi_select_flutter: ^4.0.0
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   geocoding: ^2.0.3
   cupertino_icons: ^1.0.8
+  file_picker: ^8.1.7
+  image_picker: ^0.8.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

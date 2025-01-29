@@ -37,7 +37,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
       // Display success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Password reset successful'),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFF4B5320),
       ));
       Navigator.pop(context); // Close the dialog
     } else {
@@ -76,6 +76,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
               ),
             ),
             obscureText: true,
+            cursorColor: Color(0xFF4B5320),
           ),
           SizedBox(height: 20),
         ],

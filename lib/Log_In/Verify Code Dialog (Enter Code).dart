@@ -31,7 +31,7 @@ class _ResetCodeDialogState extends State<ResetCodeDialog> {
       // Display success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Code verified successfully'),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFF4B5320),
       ));
 
       // Close the ResetCodeDialog
@@ -75,6 +75,7 @@ class _ResetCodeDialogState extends State<ResetCodeDialog> {
           ),
         ),
         obscureText: true,
+        cursorColor: Color(0xFF4B5320),
       ),
       actions: [
         TextButton(

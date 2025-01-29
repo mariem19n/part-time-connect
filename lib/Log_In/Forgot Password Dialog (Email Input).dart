@@ -29,7 +29,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       // Handle success
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(responseBody['message']),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFF4B5320),
       ));
 
       // Close the ForgotPasswordDialog
@@ -80,7 +80,8 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             borderSide: BorderSide(color: Color(0xFF4B5320), width: 1), // Lighter green when not focused
           ),
         ),
-        obscureText: true,
+        obscureText: false,
+        cursorColor: Color(0xFF4B5320),
       ),
       actions: [
         TextButton(

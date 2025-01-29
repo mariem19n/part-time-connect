@@ -13,7 +13,6 @@ class LogInPage extends StatefulWidget {
 class _LogInPageState extends State<LogInPage> {
   bool _obscureText = true;
   bool _showForgotPassword = false;
-
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -43,13 +42,24 @@ class _LogInPageState extends State<LogInPage> {
           MaterialPageRoute(builder: (context) => HomePage()),
         );
 
-      } else {
+        // Si la connexion est réussie, cacher le bouton "Forgot Password?"
+        setState(() {
+          _showForgotPassword = false;
+        });
+
+      }else {
         final responseBody = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(responseBody['error'] ?? 'An error occurred. Please try again later.'),
           backgroundColor: Colors.red,
         ));
+
+        // Si l'erreur est liée au mot de passe, afficher le bouton "Forgot Password?"
+        setState(() {
+          _showForgotPassword = true;
+        });
       }
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to connect to the server. Please try again later.'),

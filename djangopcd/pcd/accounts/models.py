@@ -1,8 +1,4 @@
 from django.db import models
-
-# Create your models here.
-# accounts/models.py
-from django.db import models
 from django.contrib.auth.models import User
 
 # class Order(models.Model):
@@ -11,8 +7,6 @@ from django.contrib.auth.models import User
 #     quantity = models.IntegerField()
 #     # Add other fields as needed
 
-from django.db import models
-from django.contrib.auth.models import User
 
 # class UserProfile(models.Model):
 #     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -23,7 +17,7 @@ from django.contrib.auth.models import User
 #     def __str__(self):
 #         return self.user.username
     
-from django.db import models
+####################################################"ok"
 
 class UserRegistration(models.Model):
     username = models.CharField(max_length=100)
@@ -34,9 +28,13 @@ class UserRegistration(models.Model):
 
     def __str__(self):
         return self.username
+####################################################
 
+class JobType(models.Model):
+    name = models.CharField(max_length=100 , blank=True)
 
-from django.db import models
+    def __str__(self):
+        return self.name
 
 class Company(models.Model):
     
@@ -44,10 +42,16 @@ class Company(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)  # Hashed password
     workplace_images = models.ManyToManyField('WorkplaceImage', blank=True)
+    jobTypes = models.ManyToManyField(JobType)
 
 
     def __str__(self):
         return self.company_name
+    
+    def add_images(self, images):
+        for image in images:
+            workplace_image = WorkplaceImage.objects.create(image=image)
+            self.workplace_images.add(workplace_image)
 
 class WorkplaceImage(models.Model):
     image = models.ImageField(upload_to='workplace_images/')

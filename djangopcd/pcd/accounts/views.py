@@ -1,62 +1,41 @@
-
 from django.shortcuts import render, redirect
-# from django.contrib.auth.forms import UserCreationForm
-from .forms import CreateUserForm
 from django.contrib.auth import authenticate , login, logout
-# from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from rest_framework.decorators import api_view
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .forms import CreateUserForm  # Assuming you've created this custom form
-from django.core.files.storage import FileSystemStorage
-
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework import status
-from .models import User
-
-from django.core.files.storage import FileSystemStorage
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from .models import UserRegistration
+from .models import Company, User
 import json
-from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
+from .models import UserRegistration
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from rest_framework.decorators import api_view
+from .models import Company, JobType, WorkplaceImage
+#################################################ok
 
-@csrf_exempt
-@require_http_methods(["POST"])
-
-@csrf_exempt
+@api_view(["POST"])
 def registerPage(request):
     if request.method == 'POST':
         try:
-            # Parse JSON payload
-            data = json.loads(request.body)
-            username = data.get('username')
-            email = data.get('email')
-            password = data.get('password')
-            skills = data.get('skills')
-            resume = request.FILES.get('resume')  # Handle uploaded files (if applicable)
+            # Get form data from request
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            skills = request.POST.get("skills", "").split(",")  # Convert to list
 
-            # Validation for required fields
-            if not username or not email or not password or not skills:
+            # Handle file upload
+            resume = request.FILES.get('resume')  # PDF file uploaded by the user
+
+            # Validate required fields
+            if not username or not email or not password or not skills or not resume:
                 return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
 
-            # Create and save the User object
+            # Create and save the User object (assuming 'User' is a Django model)
             hashed_password = make_password(password)
             user = User.objects.create(username=username, email=email, password=hashed_password)
 
@@ -64,7 +43,7 @@ def registerPage(request):
             user_registration = UserRegistration(
                 username=username,
                 email=email,
-                password=hashed_password,  # Store hashed password for consistency
+                password=hashed_password,
                 resume=resume,
                 skills=skills
             )
@@ -76,38 +55,12 @@ def registerPage(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-# login_required(login_url='login')
-# def registerPage(request):
-#     form = CreateUserForm()
-#     if request.method == 'POST':
-#         form = CreateUserForm(request.POST)  # Corrected variable name
-#         if form.is_valid():  # Proper indentation
-#             form.save()  # Save the user data
-#             return redirect('login')  # Redirect to the login page after successful registration
-    
-#     context = {'form': form}
-#     return render(request, 'accounts/register.html', context)
 
-login_required(login_url='login')
-# def loginPage(request):
-#     context = {}  
-#     if request.method == 'POST':
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
 
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             return redirect('home')
-#         else:
-#             messages.info(request, 'Username OR password is incorrect')
-#             return render(request, 'accounts/login.html', context)
-#     return render(request, 'accounts/login.html', context)
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
+###################################################ok
+
+
 @api_view(['POST'])
-# @csrf_exempt  # Disable CSRF for simplicity (secure this for production)
 def loginPage(request):
     if request.method == 'POST':
         try:
@@ -125,50 +78,15 @@ def loginPage(request):
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-# from django.contrib.auth.models import User
-
-# @csrf_exempt
-# def loginPage(request):
-#     if request.method == 'POST':
-#         try:
-#             # Parse JSON payload
-#             data = json.loads(request.body)
-#             email = data.get('email')
-#             password = data.get('password')
-
-#             # Validate email and password fields
-#             if not email or not password:
-#                 return JsonResponse({'error': 'Email and password are required'}, status=400)
-
-#             # Fetch user by email
-#             try:
-#                 user = User.objects.get(email=email)
-#             except User.DoesNotExist:
-#                 return JsonResponse({'error': 'Invalid email or password'}, status=401)
-
-#             # Authenticate user using username from the User object
-#             user = authenticate(request, username=user.username, password=password)
-#             if user is not None:
-#                 login(request, user)
-#                 return JsonResponse({'message': 'Login successful', 'email': user.email}, status=200)
-#             else:
-#                 return JsonResponse({'error': 'Invalid email or password'}, status=401)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-#         except Exception as e:
-#             return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'}, status=500)
-#     else:
-#         return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-
+###################################################
 
 login_required(login_url='login')
 def logoutUser(request) :
     logout(request)
     return redirect('login')
 
-from django.contrib.auth.forms import UserChangeForm, PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
+
+##############################################
 
 login_required(login_url='login')
 def updateProfile(request):
@@ -204,132 +122,53 @@ def updateProfile(request):
     })
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.hashers import make_password
-from .models import Company, WorkplaceImage
-import json
-# If you find this line in views.py or elsewhere, remove it or correct it:
-
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
-from django.http import JsonResponse
-from .models import Company, WorkplaceImage
-
-@csrf_exempt
+###################################################
+@api_view(["POST"])
 def register_company(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            data = request.POST  # Récupérer les données du formulaire
-            company_name = data.get('company_name')
-            email = data.get('email')
-            password = data.get('password')
+            # Get form data from request
+            company_name = request.data.get('company_name')
+            email = request.data.get('email')
+            password = request.data.get('password')
+            jobTypes = request.data.get('jobTypes')
+            workplace_images = request.FILES.getlist('workplace_images')
 
-            if not company_name or not email or not password:
-                return JsonResponse({'error': 'Tous les champs obligatoires doivent être remplis'}, status=400)
+            # Validate required fields
+            if not company_name or not email or not password or not jobTypes or not workplace_images:
+                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
 
-            # Vérifier si l'entreprise existe déjà
-            if Company.objects.filter(email=email).exists():
-                return JsonResponse({'error': 'Email déjà utilisé'}, status=400)
-
-            # Hacher le mot de passe
+            # Hash the password (you may want to use Django's make_password function)
             hashed_password = make_password(password)
 
-            # Créer l'entreprise
+            # Create and save the Company object
             company = Company.objects.create(
                 company_name=company_name,
                 email=email,
-                password=hashed_password,
+                password=hashed_password,  # Ensure password is hashed before saving
+                #jobTypes=jobTypes,
             )
 
-            # Créer un utilisateur pour l'entreprise
-            user = User.objects.create_user(username=email, password=password)
-            user.company = company
-            user.save()
+            jobTypes_list = jobTypes.split(',')  # Si c'est une chaîne, on la convertit en liste
+            company.jobTypes.set(jobTypes_list)  
 
-            # Sauvegarder les images
-            images = request.FILES.getlist('workplace_images')
-            for img in images:
-                image_obj = WorkplaceImage.objects.create(image=img)
-                company.workplace_images.add(image_obj)
+            # Ajouter les images de l'entreprise
+            company.add_images(workplace_images)
 
-            return JsonResponse({'message': 'Entreprise et utilisateur enregistrés avec succès'}, status=201)
+            # Récupérer les `jobTypes` et `workplace_images` après avoir associé
+            company_job_types = company.jobTypes.all()  # Récupère tous les types de job associés
+            company_workplace_images = company.workplace_images.all()  # Récupère toutes les images associées
+
+
+            return JsonResponse({'status': 'success', 'message': 'Company registered successfully!'}, status=201)
 
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
-# from django.contrib.auth.models import User
-# from django.contrib.auth.hashers import make_password
-# from django.http import JsonResponse
-# from .models import Company
-
-# from django.contrib.auth.models import User
-# from django.contrib.auth.hashers import make_password
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# from .models import Company
-# import json
-# login_required(login_url='login')
-# @csrf_exempt
-# def update_company(request):
-#     if request.method == 'PUT':  # Only accept PUT request
-#         try:
-#             data = request.body.decode('utf-8')  # Parse the body as JSON data
-#             data = json.loads(data)  # Convert to Python dict
-
-#             # Extract data from the request
-            
-#             companyname = data.get('username')
-#             email = data.get('email')
-#             password = data.get('password')
-#             company_name = data.get('company_name')
-
-#             # Validate input
-#             if not user_id or not email:
-#                 return JsonResponse({'error': 'User ID and email are required'}, status=400)
-
-#             # Fetch the user object by ID
-#             try:
-#                 user = User.objects.get(id=user_id)
-#             except User.DoesNotExist:
-#                 return JsonResponse({'error': 'User not found'}, status=404)
-
-#             # Update user fields
-#             if username:
-#                 user.username = username
-#             if email:
-#                 user.email = email
-#             if password:  # Hash password if provided
-#                 user.password = make_password(password)
-
-#             # Update the associated company information (if needed)
-#             if company_name:
-#                 # Get the company by email (same as user email)
-#                 company = Company.objects.filter(email=user.email).first()
-#                 if company:
-#                     company.company_name = company_name
-#                     company.save()
-
-#             # Save the user data
-#             user.save()
-
-#             return JsonResponse({'message': 'User information updated successfully'}, status=200)
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#     return JsonResponse({'error': 'Method not allowed'}, status=405)  # Only PUT method is allowed
-
-import json
-from django.http import JsonResponse
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from .models import UserRegistration
-
+###################################################
 @csrf_exempt
 @login_required
 def updateProfile(request):

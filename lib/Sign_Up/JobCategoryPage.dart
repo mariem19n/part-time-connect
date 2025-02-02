@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projects/Job_Provider/Registration_Recruiter.dart';
+import 'package:flutter_projects/Job_seeker/RegistrationScreen.dart';
 import 'package:flutter_projects/Job_seeker/WorkLocationPage.dart';
-import 'package:flutter_projects/recruiter_interface.dart';
 
 class JobCategoryPage extends StatelessWidget {
   @override
@@ -67,7 +68,8 @@ class JobCategoryPage extends StatelessWidget {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => Worklocationpage()),
+                                //MaterialPageRoute(builder: (context) => Worklocationpage()),
+                                MaterialPageRoute(builder: (context) => RegistrationScreen()),
                               );
                             },
                             child: Text('Job Seeker'),
@@ -89,8 +91,7 @@ class JobCategoryPage extends StatelessWidget {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                    builder: (context) => RecruiterInterface()), // Navigate to Recruiter
+                                MaterialPageRoute(builder: (context) => RegistrationRecruiter()),
                               );
                             },
                             child: Text('Recruiter'),

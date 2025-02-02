@@ -1,67 +1,135 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate , login, logout
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+import random
 import json
-from django.contrib.auth.models import User
+import os
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Company, User
-import json
+from .models import PasswordResetCode, UserRegistration, CompanyRegistration
+from django.core.mail import send_mail
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate , login, logout
 from django.contrib.auth.hashers import make_password
-from .models import UserRegistration
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.files.storage import default_storage
 from django.contrib.auth import update_session_auth_hash
 from rest_framework.decorators import api_view
-from .models import Company, JobType, WorkplaceImage
-#################################################ok
-
-@api_view(["POST"])
-def registerPage(request):
+from .models import CompanyRegistration
+from django.shortcuts import get_object_or_404
+########################################################################################################### Registration_Company Backend >>> Done
+@csrf_exempt
+@require_http_methods(["POST"])
+def companyRegistration(request):
     if request.method == 'POST':
         try:
             # Get form data from request
             username = request.POST.get('username')
             email = request.POST.get('email')
             password = request.POST.get('password')
-            skills = request.POST.get("skills", "").split(",")  # Convert to list
-
-            # Handle file upload
-            resume = request.FILES.get('resume')  # PDF file uploaded by the user
+            jobtype = request.POST.get("jobtype", "")
+            company_description = request.POST.get('company_description', '')
+            photos = request.FILES.getlist('photo')
 
             # Validate required fields
-            if not username or not email or not password or not skills or not resume:
+            if not username or not email or not password or not jobtype or not photos or not company_description:
                 return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
 
-            # Create and save the User object (assuming 'User' is a Django model)
+            # Hash the password
             hashed_password = make_password(password)
-            user = User.objects.create(username=username, email=email, password=hashed_password)
+
+            # Save photos to the media directory and store their paths
+            saved_files = []
+            for photo in photos:
+                photo_path = default_storage.save(f"photos/{photo.name}", photo)
+                saved_files.append(photo_path)
+
+            # Create and save the CompanyRegistration object
+            company_registration = CompanyRegistration(
+                username=username,
+                email=email,
+                password=hashed_password,
+                jobtype=jobtype,
+                company_description=company_description,
+            )
+            company_registration.set_photos(saved_files)  # Store photo paths as a JSON string
+            company_registration.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Company registered successfully!',
+                'files': saved_files
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+########################################################################################################### Registration_User Backend >>> Done
+@csrf_exempt
+@require_http_methods(["POST"])
+def registerPage(request):
+    if request.method == 'POST':
+        try:
+
+            # Get form data from request
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            skills = request.POST.get("skills", "")
+            resumes = request.FILES.getlist('resume')
+
+            # Validate required fields
+            if not username or not email or not password or not skills or not resumes:
+                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+
+            # Hash the password
+            hashed_password = make_password(password)
+
+            # Save resumes to the media directory and store their paths
+            saved_files = []
+            for resume in resumes:
+                resume_path = default_storage.save(f"resumes/{resume.name}", resume)
+                saved_files.append(resume_path)
 
             # Create and save the UserRegistration object
             user_registration = UserRegistration(
                 username=username,
                 email=email,
                 password=hashed_password,
-                resume=resume,
-                skills=skills
+                skills=skills,
             )
+            user_registration.set_resumes(saved_files)  # Store resume paths as a JSON string
             user_registration.save()
 
-            return JsonResponse({'status': 'success', 'message': 'User registered successfully!'}, status=201)
+            return JsonResponse({
+                'status': 'success',
+                'message': 'User registered successfully!',
+                'files': saved_files
+            }, status=201)
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-
-###################################################ok
-
-
-@api_view(['POST'])
+########################################################################################################### Log_Out Backend >>> Failed
+@csrf_protect  # Add CSRF protection explicitly
+@login_required(login_url='login')
+def logoutUser(request):
+    if request.method == 'POST':  # Ensure logout is only allowed via POST
+        logout(request)
+        return redirect('login')
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+########################################################################################################### Log_In Backend >>> Done
+@ensure_csrf_cookie  # Ensure CSRF cookie is set for GET requests
+@csrf_protect  # Add CSRF protection for POST requests
+@api_view(['GET', 'POST'])
 def loginPage(request):
+    if request.method == 'GET':
+        return JsonResponse({'detail': 'CSRF cookie set'})
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -77,127 +145,138 @@ def loginPage(request):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+########################################################################################################### Password Reset Backend >>> Done
+@api_view(['POST'])
+def request_password_reset(request):
+    email = request.data.get('email')  # Get email from request body
+    if not email:
+        return Response({'error': 'Email is required'}, status=400)
 
-###################################################
+    # Check if email exists in the User model
+    if not User.objects.filter(email=email).exists():
+        # Send a generic response for security reasons
+        return Response({'message': 'If the email exists, a code will be sent.'})
 
-login_required(login_url='login')
-def logoutUser(request) :
-    logout(request)
-    return redirect('login')
+    # Generate 6-digit random code
+    code = f"{random.randint(100000, 999999)}"
 
+    # Save the code in the database
+    PasswordResetCode.objects.create(email=email, code=code)
 
-##############################################
+    # Send the reset code via email
+    send_mail(
+        'Password Reset Code',
+        f'Your reset code is: {code}',
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=False,
+    )
 
-login_required(login_url='login')
-def updateProfile(request):
-    if request.method == 'POST':
-        updated = False  # To track if any field was updated
-        
-        # Handle username update
-        new_username = request.POST.get('username')
-        if new_username and new_username != request.user.username:
-            request.user.username = new_username
-            request.user.save()
-            updated = True
-
-        # Handle password update
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)  # Keep the user logged in
-            updated = True
-
-        # Redirect or show success message
-        if updated:
-            return redirect('success_page')  # Replace 'success_page' with the name of your success URL
-        else:
-            # If no updates were made, add an error message
-            form.add_error(None, "No changes were made.")
-    else:
-        form = PasswordChangeForm(request.user)
-
-    return render(request, 'accounts/update_profile.html', {
-        'form': form,
-        'user': request.user,
-    })
+    return Response({'message': 'If the email exists, a code will be sent.'})
 
 
-###################################################
-@api_view(["POST"])
-def register_company(request):
-    if request.method == "POST":
-        try:
-            # Get form data from request
-            company_name = request.data.get('company_name')
-            email = request.data.get('email')
-            password = request.data.get('password')
-            jobTypes = request.data.get('jobTypes')
-            workplace_images = request.FILES.getlist('workplace_images')
+@api_view(['POST'])
+def verify_reset_code(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
 
-            # Validate required fields
-            if not company_name or not email or not password or not jobTypes or not workplace_images:
-                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+    if not email or not code:
+        return Response({'error': 'Email and code are required'}, status=400)
 
-            # Hash the password (you may want to use Django's make_password function)
-            hashed_password = make_password(password)
+    try:
+        # Check if the reset code exists
+        reset_code = PasswordResetCode.objects.get(email=email, code=code)
 
-            # Create and save the Company object
-            company = Company.objects.create(
-                company_name=company_name,
-                email=email,
-                password=hashed_password,  # Ensure password is hashed before saving
-                #jobTypes=jobTypes,
-            )
+        # Verify if the code has expired
+        if reset_code.is_expired():
+            return Response({'error': 'Code expired'}, status=400)
 
-            jobTypes_list = jobTypes.split(',')  # Si c'est une chaîne, on la convertit en liste
-            company.jobTypes.set(jobTypes_list)  
-
-            # Ajouter les images de l'entreprise
-            company.add_images(workplace_images)
-
-            # Récupérer les `jobTypes` et `workplace_images` après avoir associé
-            company_job_types = company.jobTypes.all()  # Récupère tous les types de job associés
-            company_workplace_images = company.workplace_images.all()  # Récupère toutes les images associées
+        return Response({'message': 'Code verified'})
+    except PasswordResetCode.DoesNotExist:
+        return Response({'error': 'Invalid email or code'}, status=400)
 
 
-            return JsonResponse({'status': 'success', 'message': 'Company registered successfully!'}, status=201)
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+    new_password = request.data.get('new_password')
 
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    if not email or not code or not new_password:
+        return Response({'error': 'Email, code, and new password are required'}, status=400)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    try:
+        # Fetch the reset code and validate
+        reset_code = PasswordResetCode.objects.get(email=email, code=code)
 
+        # Verify if the code has expired
+        if reset_code.is_expired():
+            return Response({'error': 'Code expired'}, status=400)
 
-###################################################
+        # Reset the user's password
+        user = User.objects.get(email=email)
+        user.password = make_password(new_password)
+        user.save()
+
+        # Invalidate the reset code after successful reset
+        reset_code.delete()
+        return Response({'message': 'Password reset successful'})
+    except PasswordResetCode.DoesNotExist:
+        return Response({'error': 'Invalid email or code'}, status=400)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=400)
+    
+####################################################################### set company descpription
+
 @csrf_exempt
-@login_required
-def updateProfile(request):
-    if request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            user = request.user  # Get the authenticated user
+def set_company_description(request, company_id):
+    if request.method == "POST":
+        company = get_object_or_404(CompanyRegistration, id=company_id)
+        data = json.loads(request.body)
+        company_description = data.get("company_description")
 
-            # Update fields if provided
-            username = data.get('username', user.username)
-            email = data.get('email', user.email)
-            skills = data.get('skills', user.userregistration.skills)
-            resume = request.FILES.get('resume', user.userregistration.resume)
+        if company_description is not None:
+            company.company_description = company_description
+            company.save()
+            return JsonResponse({"message": "About Us updated successfully"})
+        
+        return JsonResponse({"error": "Invalid data"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+################################################################### edit company description
+@csrf_exempt
+def edit_company_description(request, company_id):
+    if request.method == "PUT":
+        company = get_object_or_404(CompanyRegistration, id=company_id)
+        data = json.loads(request.body)
+        new_company_description = data.get("company_description")
 
-            user.username = username
-            user.email = email
-            user.save()
+        if new_company_description is not None:
+            company.company_description = new_company_description
+            company.save()
+            return JsonResponse({"message": "About Us updated successfully", "company_description": company.company_description})
+        
+        return JsonResponse({"error": "Invalid data"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
-            user_registration = UserRegistration.objects.get(username=user.username)
-            user_registration.skills = skills
-            if resume:
-                user_registration.resume = resume  # Update resume if provided
-            user_registration.save()
+################################################################### update company name
+@csrf_exempt
+def update_company_name(request, company_id):
+    if request.method == "POST":
+        company = get_object_or_404(CompanyRegistration, id=company_id)
+        data = json.loads(request.body)
+        new_name = data.get("username")
 
-            return JsonResponse({'status': 'success', 'message': 'Profile updated successfully!'}, status=200)
+        if new_name:
+            if CompanyRegistration.objects.filter(username=new_name).exists():
+                return JsonResponse({"error": "Company name already exists"}, status=400)
 
-        except UserRegistration.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'User profile not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            company.username = new_name
+            company.save()
+            return JsonResponse({"message": "Company name updated successfully"})
+        
+        return JsonResponse({"error": "Invalid data"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

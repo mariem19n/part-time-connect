@@ -1,58 +1,56 @@
+from datetime import timedelta
+from django.utils.timezone import now
+from django.contrib.auth.hashers import make_password
 from django.db import models
 from django.contrib.auth.models import User
+import json
 
-# class Order(models.Model):
-#     # Define fields for the Order model
-#     product_name = models.CharField(max_length=100)
-#     quantity = models.IntegerField()
-#     # Add other fields as needed
-
-
-# class UserProfile(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     full_name = models.CharField(max_length=200, blank=True, null=True)
-#     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
-#     skills = models.CharField(max_length=200, blank=True, null=True)
-
-#     def __str__(self):
-#         return self.user.username
-    
-####################################################"ok"
-
-class UserRegistration(models.Model):
+########################################################################################################### Registration_Company Backend Model >>> Done
+class CompanyRegistration(models.Model):
     username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)  # Note: In production, you should hash passwords
-    resume = models.FileField(upload_to='resumes/')
-    skills = models.CharField(max_length=200)  # You might want to use ManyToManyField for better scalability
+    password = models.CharField(max_length=128)
+    jobtype = models.CharField(max_length=200)
+    company_description = models.TextField(null=True, blank=True)
+    photos = models.TextField(null=True, blank=True)  # Store photo paths as a JSON string
 
     def __str__(self):
         return self.username
-####################################################
 
-class JobType(models.Model):
-    name = models.CharField(max_length=100 , blank=True)
+    def set_photos(self, photo_paths):
+        """Store photo paths as a JSON string."""
+        self.photos = json.dumps(photo_paths)
 
-    def __str__(self):
-        return self.name
+    def get_photos(self):
+        """Retrieve photo paths as a list."""
+        return json.loads(self.photos) if self.photos else []
 
-class Company(models.Model):
-    
-    company_name = models.CharField(max_length=255, unique=True)
+########################################################################################################### Registration_User Backend Model >>> Done
+class UserRegistration(models.Model):
+    username = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)  # Hashed password
-    workplace_images = models.ManyToManyField('WorkplaceImage', blank=True)
-    jobTypes = models.ManyToManyField(JobType)
-
+    password = models.CharField(max_length=128)
+    skills = models.CharField(max_length=200)
+    resumes = models.TextField(null=True, blank=True)  # Store resume paths as a JSON string
 
     def __str__(self):
-        return self.company_name
-    
-    def add_images(self, images):
-        for image in images:
-            workplace_image = WorkplaceImage.objects.create(image=image)
-            self.workplace_images.add(workplace_image)
+        return self.username
 
-class WorkplaceImage(models.Model):
-    image = models.ImageField(upload_to='workplace_images/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    def set_resumes(self, resume_paths):
+        """Store resume paths as a JSON string."""
+        self.resumes = json.dumps(resume_paths)
+
+    def get_resumes(self):
+        """Retrieve resume paths as a list."""
+        return json.loads(self.resumes) if self.resumes else []
+
+########################################################################################################### Password Reset Backend Model>>> Done
+class PasswordResetCode(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        # Define the expiration period (e.g., 10 minutes)
+        expiration_time = self.created_at + timedelta(minutes=5)
+        return now() > expiration_time

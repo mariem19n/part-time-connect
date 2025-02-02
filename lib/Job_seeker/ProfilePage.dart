@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget {
   final int userId; // Unique user ID to fetch profile
-
   ProfilePage({required this.userId});
 
   @override

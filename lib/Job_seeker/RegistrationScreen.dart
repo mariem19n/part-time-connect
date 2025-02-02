@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../commun/password_field.dart';
 import '../commun/Pdf_Upload.dart';
+import 'package:flutter_projects/services/RegistrationUser_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 
 class RegistrationScreen extends StatefulWidget {
@@ -12,11 +14,17 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  List<String> _uploadedPdfPaths = []; // Liste des fichiers PDF sélectionnés
+  List<String> _uploadedPdfPaths = [];
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isTermsAccepted = false;
+  final List<String> _selectedSkills = [];
 
   void _handlePdfUpload(List<String> filePaths) {
     setState(() {
-      _uploadedPdfPaths = filePaths; // Mettre à jour les fichiers sélectionnés
+      _uploadedPdfPaths = filePaths;
     });
     print('Fichiers sélectionnés : $filePaths');
   }
@@ -24,28 +32,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<void> _pickPdfFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'], // Restrict to PDF files
+      allowedExtensions: ['pdf'],
+      allowMultiple: true,
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null) {
       setState(() {
-        _uploadedPdfPaths.add(result.files.single.path!); // Add selected file to the list
+        _uploadedPdfPaths = result.paths?.whereType<String>().toList() ?? [];
       });
-      print('Uploaded file: ${result.files.single.path}');
+      print('Uploaded files: $_uploadedPdfPaths');
     }
   }
 
-  final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isTermsAccepted = false;
-
-  final List<String> _selectedSkills = ['Graphic Design', 'UI/UX'];
-
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -61,7 +62,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40), // Added spacing at the top
+              const SizedBox(height: 40),
               const Text(
                 'Hi! Let\'s get you registered.',
                 style: TextStyle(
@@ -70,21 +71,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10), // Spacing between texts
+              const SizedBox(height: 10),
               const Text(
                 'Please provide the following details.',
                 style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 20),
               TextFormField(
-                controller: _fullNameController,
+                controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Full Name', // Adding a label
-                  floatingLabelStyle: const TextStyle( // Custom style for the label
-                    color: Color(0xFF375534), // Label color
-                    fontWeight: FontWeight.bold, // Optional: Bold text
+                  labelText: 'Full Name',
+                  floatingLabelStyle: const TextStyle(
+                    color: Color(0xFF375534),
+                    fontWeight: FontWeight.bold,
                   ),
-                  hintText: 'Enter your full name', // Optional hint
+                  hintText: 'Enter your full name',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
@@ -96,22 +97,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderSide: const BorderSide(
-                      color: Colors.grey, // Border color when not focused
+                      color: Colors.grey,
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: const BorderSide(
-                      color: Color(0xFF375534), // Border color when focused
+                      color: Color(0xFF375534),
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 style: const TextStyle(
-                  color: Color(0xFF375534), // Text color for the input
-                  fontWeight: FontWeight.bold, // Applying bold styling
+                  color: Color(0xFF375534),
+                  fontWeight: FontWeight.bold,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -123,20 +124,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   return null;
                 },
               ),
-
-
-
               const SizedBox(height: 16),
-
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email Address', // Adding a label
-                  floatingLabelStyle: const TextStyle( // Custom style for the label
-                    color: Color(0xFF375534), // Custom color
-                    fontWeight: FontWeight.bold, // Optional: Bold text
+                  labelText: 'Email Address',
+                  floatingLabelStyle: const TextStyle(
+                    color: Color(0xFF375534),
+                    fontWeight: FontWeight.bold,
                   ),
-                  hintText: 'Enter your email address', // Optional hint
+                  hintText: 'Enter your email address',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
@@ -152,7 +149,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold, // Applying bold styling
+                  fontWeight: FontWeight.bold,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -164,10 +161,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
               PasswordField(controller: _passwordController),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -178,6 +173,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 16),
                   PdfUpload(
                     onFilesSelected: (filePaths) {
@@ -187,15 +183,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       print('Uploaded PDFs: $filePaths');
                     },
                   ),
-
+                  const SizedBox(height: 8),
                 ],
+
               ),
-
-
-
-
-
-
               const SizedBox(height: 16),
               const Text(
                 'Key Skills',
@@ -238,8 +229,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               TextButton(
                                 onPressed: () {
                                   if (skillController.text.isNotEmpty &&
-                                      !_selectedSkills
-                                          .contains(skillController.text)) {
+                                      !_selectedSkills.contains(skillController.text)) {
                                     setState(() {
                                       _selectedSkills.add(skillController.text);
                                     });
@@ -260,8 +250,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ],
               ),
-
-
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -309,26 +297,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate() && _isTermsAccepted && _uploadedPdfPaths.isNotEmpty) {
-                      print('Full Name: ${_fullNameController.text}');
-                      print('Email: ${_emailController.text}');
-                      print('Password: ${_passwordController.text}');
-                      print('Skills: ${_selectedSkills.join(', ')}');
-                      print('Uploaded PDFs: $_uploadedPdfPaths');
-                    } else if (_uploadedPdfPaths.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please upload at least one PDF before continuing.'),
-                        ),
+                      List<File> resumeFiles = _uploadedPdfPaths
+                          .whereType<String>()
+                          .map((path) => File(path))
+                          .toList();
+
+                      await RegistrationUserService.registerUser(
+                        username: _usernameController.text,
+                        email: _emailController.text,
+                        password: _passwordController.text,
+                        skills: _selectedSkills,
+                        resumes: resumeFiles,
                       );
-                    } else if (!_isTermsAccepted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'You must accept the terms and conditions'),
-                        ),
-                      );
+
+                      print("Données envoyées !");
+                    } else {
+                      print("Veuillez remplir tous les champs obligatoires.");
                     }
                   },
                   child: const Text(

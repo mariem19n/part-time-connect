@@ -246,11 +246,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  // Add your action here
+                                  if (skillController.text.isNotEmpty &&
+                                      !_selectedSkills.contains(skillController.text)) {
+                                    setState(() {
+                                      _selectedSkills.add(skillController.text);
+                                    });
+                                  }
                                   Navigator.pop(context);
                                 },
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Color(0xFF4B5320), // Green background
+                                  foregroundColor: Color(0xFF4B5320),
                                 ),
                                 child: Text("Add"),
                               ),

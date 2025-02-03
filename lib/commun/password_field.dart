@@ -22,6 +22,7 @@ class _PasswordFieldState extends State<PasswordField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
+          cursorColor: Color(0xFF375534),
           controller: widget.controller,
           decoration: InputDecoration(
             labelText: 'Password', // Floating label

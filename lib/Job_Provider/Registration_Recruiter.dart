@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import '../commun/password_field.dart';
 import '../commun/Image_Uploader.dart'; // Import the correct widget
 import 'package:flutter_projects/services/RegistrationCompany_service.dart';
+import 'package:flutter_projects/commun/Privacy Policy.dart';
+import 'package:flutter_projects/commun/Terms and Conditions.dart';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
+
 
 class RegistrationRecruiter extends StatefulWidget {
   const RegistrationRecruiter({super.key});
@@ -63,14 +67,15 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               ),
               const SizedBox(height: 20),
               TextFormField(
+                cursorColor: Color(0xFF375534),
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Full Name',
+                  labelText: 'Company or Organization Name',
                   floatingLabelStyle: const TextStyle(
                     color: Color(0xFF375534),
                     fontWeight: FontWeight.bold,
                   ),
-                  hintText: 'Enter your full name',
+                  hintText: 'Enter your Company or Organization name',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
@@ -101,7 +106,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your full name';
+                    return 'Please enter a company name';
                   }
                   if (value.length < 3) {
                     return 'Name must be at least 3 characters long';
@@ -111,14 +116,15 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                cursorColor: Color(0xFF375534),
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email Address',
+                  labelText: 'Professional Email Address',
                   floatingLabelStyle: const TextStyle(
                     color: Color(0xFF375534),
                     fontWeight: FontWeight.bold,
                   ),
-                  hintText: 'Enter your email address',
+                  hintText: 'Enter your professional email address',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
@@ -150,6 +156,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               PasswordField(controller: _passwordController),
               const SizedBox(height: 16),
               TextFormField(
+                cursorColor: Color(0xFF375534),
                 controller: _companyDescriptionController,
                 decoration: InputDecoration(
                   labelText: 'Company Description',
@@ -195,7 +202,9 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               const SizedBox(height: 16),
               const Text(
                 'Job Type',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF375534)),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
@@ -203,6 +212,10 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 decoration: InputDecoration(
                   hintText: 'Select job type',
                   border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF375534), width: 2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -229,37 +242,58 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 children: [
                   Checkbox(
                     value: _isTermsAccepted,
+                    activeColor: Color(0xFF375534),
                     onChanged: (value) {
                       setState(() {
                         _isTermsAccepted = value ?? false;
                       });
                     },
                   ),
-                  Expanded(
-                    child: RichText(
-                      text: const TextSpan(
-                        text: 'I agree to the ',
-                        style: TextStyle(color: Colors.black),
-                        children: [
-                          TextSpan(
-                            text: '[Terms and Conditions]',
-                            style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                color: Colors.blue),
-                          ),
-                          TextSpan(text: ' and '),
-                          TextSpan(
-                            text: '[Privacy Policy]',
-                            style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                color: Colors.blue),
-                          ),
-                        ],
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  text: 'I agree to the ',
+                  style: const TextStyle(color: Colors.black),
+                  children: [
+                    TextSpan(
+                      text: 'Terms and Conditions',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Color(0xFF375534),
                       ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TermsAndConditionsPage(),
+                            ),
+                          );
+                        },
                     ),
-                  ),
-                ],
+                    const TextSpan(text: ' and '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Color(0xFF375534),
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PrivacyPolicyPage(),
+                            ),
+                          );
+                        },
+                    ),
+                  ],
+                ),
               ),
+            )
+]
+        ),
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(

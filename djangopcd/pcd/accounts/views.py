@@ -19,6 +19,7 @@ from django.contrib.auth import update_session_auth_hash
 from rest_framework.decorators import api_view
 from .models import CompanyRegistration
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import check_password
 ########################################################################################################### Registration_Company Backend >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -129,21 +130,58 @@ def logoutUser(request):
 @api_view(['GET', 'POST'])
 def loginPage(request):
     if request.method == 'GET':
+        # For GET requests, simply set the CSRF cookie.
         return JsonResponse({'detail': 'CSRF cookie set'})
+
     if request.method == 'POST':
         try:
+            # Parse the JSON payload from the request body.
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
-
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid username or password'}, status=401)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+
+        # Ensure both username and password are provided.
+        if not username or not password:
+            return JsonResponse({'error': 'Username and password are required.'}, status=400)
+
+        # Attempt to authenticate as a Company account.
+        try:
+            company = CompanyRegistration.objects.get(username=username)
+            if check_password(password, company.password):
+                # Optionally, set session data or tokens here if needed.
+                return JsonResponse({
+                    'message': 'Company login successful',
+                    'username': company.username,
+                    'user_type': 'company',
+                    'email': company.email,
+                    'jobtype': company.jobtype,
+                    'company_description': company.company_description,
+                    'photos': company.get_photos()
+                }, status=200)
+        except CompanyRegistration.DoesNotExist:
+            pass  # Continue to check for a Job Seeker account.
+
+        # Attempt to authenticate as a Job Seeker account.
+        try:
+            job_seeker = UserRegistration.objects.get(username=username)
+            if check_password(password, job_seeker.password):
+                # Optionally, set session data or tokens here if needed.
+                return JsonResponse({
+                    'message': 'Job seeker login successful',
+                    'username': job_seeker.username,
+                    'user_type': 'job_seeker',
+                    'email': job_seeker.email,
+                    'skills': job_seeker.skills,
+                    'resumes': job_seeker.get_resumes()
+                }, status=200)
+        except UserRegistration.DoesNotExist:
+            pass
+
+        # If no matching account was found or the password did not match.
+        return JsonResponse({'error': 'Invalid username or password'}, status=401)
+
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 ########################################################################################################### Password Reset Backend >>> Done
 @api_view(['POST'])
@@ -279,4 +317,6 @@ def update_company_name(request, company_id):
         return JsonResponse({"error": "Invalid data"}, status=400)
     
     return JsonResponse({"error": "Invalid request method"}, status=405)
+########################################################ajouter photos
+
 

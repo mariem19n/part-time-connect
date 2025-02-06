@@ -32,6 +32,11 @@ class UserRegistration(models.Model):
     password = models.CharField(max_length=128)
     skills = models.CharField(max_length=200)
     resumes = models.TextField(null=True, blank=True)  # Store resume paths as a JSON string
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/', 
+        null=True, 
+        blank=True
+    )
 
     def __str__(self):
         return self.username
@@ -54,3 +59,5 @@ class PasswordResetCode(models.Model):
         # Define the expiration period (e.g., 10 minutes)
         expiration_time = self.created_at + timedelta(minutes=5)
         return now() > expiration_time
+    
+############################################################################################################

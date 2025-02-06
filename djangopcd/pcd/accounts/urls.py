@@ -16,4 +16,8 @@ urlpatterns = [
     path("set_company_description", views.set_company_description, name="set_company_description"),
     path('edit_company_description/<int:company_id>/', views.edit_company_description, name='edit_company_description'),
     path('update_company_name/<int:company_id>/', views.update_company_name, name='update_company_name'),
+    path('update_user_name/<int:user_id>/', views.update_user_name, name="update_user_name"),
+    path('update_skills/<int:user_id>/', views.update_user_skills, name="update_skills"),
+    path('update-profile-picture/<int:user_id>/', views.update_profile_picture, name='update_profile_picture'),
+    
 ]

@@ -51,13 +51,22 @@ class CreateUserForm(UserCreationForm):
 
 
 from django import forms
-from .models import Company
+from .models import CompanyRegistration
 
 class CompanyRegistrationForm(forms.ModelForm):
     class Meta:
-        model = Company
-        fields = ['company_name', 'email', 'password', 'workplace_images']
+        model = CompanyRegistration
+        fields = ['username', 'email', 'password', 'jobtype','company_description' , 'photos']
         widgets = {
             'password': forms.PasswordInput(),
         }
 
+#########################################
+
+from django import forms
+from .models import UserRegistration
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = UserRegistration
+        fields = ['profile_picture']  # Include other fields if necessary

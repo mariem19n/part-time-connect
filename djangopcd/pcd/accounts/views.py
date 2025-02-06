@@ -20,6 +20,18 @@ from rest_framework.decorators import api_view
 from .models import CompanyRegistration
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import check_password
+##########################
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import ProfileUpdateForm
+from .models import UserRegistration
+################################
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import UserRegistration  # Ensure you import your model
 ########################################################################################################### Registration_Company Backend >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -317,6 +329,76 @@ def update_company_name(request, company_id):
         return JsonResponse({"error": "Invalid data"}, status=400)
     
     return JsonResponse({"error": "Invalid request method"}, status=405)
-########################################################ajouter photos
+########################################################ajouter photos pour l'utilisateur
+# views.py
 
+
+
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from .models import UserRegistration
+from django.core.exceptions import ValidationError
+@csrf_exempt
+def update_profile_picture(request, user_id):
+    if request.method == 'POST' and request.FILES.get('profile_picture'):
+        user = get_object_or_404(UserRegistration, id=user_id)
+        
+        # Check if user already has a profile picture
+        if user.profile_picture:
+            # If profile picture exists, update it
+            user.profile_picture = request.FILES['profile_picture']
+            user.save()
+            return JsonResponse({"message": "Profile picture updated successfully."}, status=200)
+        
+        # If no profile picture exists, add the new one
+        user.profile_picture = request.FILES['profile_picture']
+        user.save()
+        return JsonResponse({"message": "Profile picture uploaded successfully."}, status=200)
+    
+    return JsonResponse({"error": "No profile picture provided."}, status=400)
+
+
+######################################################### update user name
+
+@csrf_exempt
+def update_user_name(request, user_id):
+    if request.method == "POST":
+        user = get_object_or_404(UserRegistration, id=user_id)
+        data = json.loads(request.body)
+        new_name = data.get("username")
+
+        if new_name:
+            if UserRegistration.objects.filter(username=new_name).exists():
+                return JsonResponse({"error": "Username already exists"}, status=400)
+
+            user.username = new_name
+            user.save()
+            return JsonResponse({"message": "Username updated successfully"})
+        
+        return JsonResponse({"error": "Invalid data"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+###################################################### update the skills
+@csrf_exempt
+def update_user_skills(request, user_id):
+    if request.method == "PUT":
+        try:
+            user = get_object_or_404(UserRegistration, id=user_id)
+            data = json.loads(request.body)
+            new_skills = data.get("skills")
+
+            if not new_skills:
+                return JsonResponse({"error": "Skills field is required"}, status=400)
+
+            user.skills = new_skills
+            user.save()
+            return JsonResponse({"message": "Skills updated successfully", "skills": user.skills})
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+#################################################################### update the workplace company photos
 

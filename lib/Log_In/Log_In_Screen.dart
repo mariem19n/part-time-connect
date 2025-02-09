@@ -8,10 +8,12 @@ import 'package:flutter_projects/commun/csrf_utils.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter_projects/Job_seeker/ProfilePage.dart';
 
+
 class LogInPage extends StatefulWidget {
   @override
   _LogInPageState createState() => _LogInPageState();
 }
+
 
 class _LogInPageState extends State<LogInPage> {
   bool _obscureText = true;
@@ -21,9 +23,12 @@ class _LogInPageState extends State<LogInPage> {
   final cookieJar = CookieJar();
 
 
+
+
   void validateLogin() async {
     String username = usernameController.text;
     String password = passwordController.text;
+
 
     try {
       final csrfToken = await getCsrfToken(cookieJar);
@@ -36,20 +41,25 @@ class _LogInPageState extends State<LogInPage> {
         return;
       }
 
+
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8000/api/login/'), // Check if this endpoint is correct
         headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
         body: json.encode({'username': username, 'password': password}),
       );
 
+
       print("📡 Status Code: ${response.statusCode}");
       print("📡 Response Body: ${response.body}");
+
 
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
         int id = responseBody['id'];  // ✅ Backend now returns 'id'
 
+
         print("✅ Login Success! User ID: $id");
+
 
         Navigator.pushReplacement(
           context,
@@ -58,6 +68,7 @@ class _LogInPageState extends State<LogInPage> {
       } else {
         final responseBody = json.decode(response.body);
         print("❌ Error Response: ${responseBody['error'] ?? 'Unknown error'}");
+
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(responseBody['error'] ?? 'An error occurred. Please try again later.'),
@@ -72,6 +83,8 @@ class _LogInPageState extends State<LogInPage> {
       ));
     }
   }
+
+
 
 
   @override
@@ -232,6 +245,7 @@ class _LogInPageState extends State<LogInPage> {
                               width: 2, // Border width
                             ),
 
+
                           ),
                         ),
                     ],
@@ -245,6 +259,7 @@ class _LogInPageState extends State<LogInPage> {
     );
   }
 }
+
 
 // Custom clipper for a quarter-circle
 class QuarterCircleClipper extends CustomClipper<Path> {
@@ -262,7 +277,9 @@ class QuarterCircleClipper extends CustomClipper<Path> {
     return path;
   }
 
+
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
+
 

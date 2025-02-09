@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_projects/commun/csrf_utils.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter_projects/Job_seeker/ProfilePage.dart';
 
 class LogInPage extends StatefulWidget {
   @override
@@ -25,62 +26,53 @@ class _LogInPageState extends State<LogInPage> {
     String password = passwordController.text;
 
     try {
-      // Retrieve CSRF token
-      //final csrfToken = await getCsrfToken();
       final csrfToken = await getCsrfToken(cookieJar);
       if (csrfToken == null) {
+        print("❌ CSRF Token is null.");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Failed to retrieve CSRF token. Please try again.'),
           backgroundColor: Colors.red,
         ));
         return;
       }
+
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/login/'),  // Ensure this URL is correct in your Django API
-        headers: {'Content-Type': 'application/json','X-CSRFToken': csrfToken,},
+        Uri.parse('http://10.0.2.2:8000/api/login/'), // Check if this endpoint is correct
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
         body: json.encode({'username': username, 'password': password}),
       );
-      print(response.statusCode);
-      print(response.body);
 
+      print("📡 Status Code: ${response.statusCode}");
+      print("📡 Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(responseBody['message']),
-          backgroundColor: Colors.green,
-        ));
+        int id = responseBody['id'];  // ✅ Backend now returns 'id'
+
+        print("✅ Login Success! User ID: $id");
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => ProfilePage(userId: id)),
         );
-
-        // Si la connexion est réussie, cacher le bouton "Forgot Password?"
-        setState(() {
-          _showForgotPassword = false;
-        });
-
-      }else {
+      } else {
         final responseBody = json.decode(response.body);
+        print("❌ Error Response: ${responseBody['error'] ?? 'Unknown error'}");
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(responseBody['error'] ?? 'An error occurred. Please try again later.'),
           backgroundColor: Colors.red,
         ));
-
-        // Si l'erreur est liée au mot de passe, afficher le bouton "Forgot Password?"
-        setState(() {
-          _showForgotPassword = true;
-        });
       }
-
     } catch (e) {
+      print("❌ Exception: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to connect to the server. Please try again later.'),
         backgroundColor: Colors.red,
       ));
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

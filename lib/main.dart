@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
+import 'splash_screen.dart'; // Import the splash screen
+import 'Job_seeker/RegistrationScreen.dart';
+import 'Job_seeker/ProfilePage.dart';
+import 'Log_In/Log_In_Screen.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -10,7 +14,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(), // Start with the splash scree
+      home: SplashScreen(), // Start with the splash screen
+      //home: LogInPage(),
+
 
     );
   }

@@ -18,12 +18,15 @@ class _ProfilePageState extends State<ProfilePage> {
   String email = "Loading...";
   String aboutMe = "No description available"; // ✅ About Me
   List<String> keySkills = [];
+  List<String> certifications = [];
+  List<String> languages = [];
 
   File? _profileImage;
 
   /// **Fetch user profile data from Django backend**
   Future<void> _fetchUserProfile() async {
-    final String apiUrl = "http://10.0.2.2:8000/api/profile/${widget.userId}/"; // ✅ API URL
+    final String apiUrl = "http://10.0.2.2:8000/api/profile/${widget
+        .userId}/"; // ✅ API URL
 
     try {
       print("📡 Fetching profile from: $apiUrl");
@@ -37,8 +40,11 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           username = data["username"] ?? "No Username";
           email = data["email"] ?? "No Email";
-          aboutMe = data["about_me"] ?? "No description available"; // ✅ Fetch About Me
-          keySkills = data["key_skills"] != null ? List<String>.from(data["key_skills"]) : [];
+          aboutMe = data["about_me"] ??
+              "No description available"; // ✅ Fetch About Me
+          keySkills =
+          data["key_skills"] != null ? List<String>.from(data["key_skills"]) : [
+          ];
           _isLoading = false;
         });
       } else {
@@ -49,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() => _isLoading = false);
     }
   }
+
 /*
   /// **Update About Me Section on the Server and in UI**
   Future<void> _updateAboutMe(String newText) async {
@@ -78,13 +85,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _updateAboutMe(String newText) {
     setState(() {
-      aboutMe = newText.isEmpty ? "No description available" : newText; // ✅ Update the UI only
+      aboutMe = newText.isEmpty
+          ? "No description available"
+          : newText; // ✅ Update the UI only
     });
   }
 
   /// **Pick an image from the gallery**
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _profileImage = File(pickedFile.path);
@@ -96,11 +106,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   /// **Upload profile image to the Django backend**
   Future<void> _uploadProfileImage(File imageFile) async {
-    final String uploadUrl = "http://10.0.2.2:8000/api/profile/${widget.userId}/upload/";
+    final String uploadUrl = "http://10.0.2.2:8000/api/profile/${widget
+        .userId}/upload/";
 
     try {
       var request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
-      request.files.add(await http.MultipartFile.fromPath('profile_picture', imageFile.path));
+      request.files.add(
+          await http.MultipartFile.fromPath('profile_picture', imageFile.path));
 
       var response = await request.send();
       if (response.statusCode == 200) {
@@ -129,7 +141,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SafeArea(
         child: _isLoading
-            ? Center(child: CircularProgressIndicator()) // Show loader while fetching data
+            ? Center(
+            child: CircularProgressIndicator()) // Show loader while fetching data
             : SingleChildScrollView(
           padding: EdgeInsets.all(16.0),
           child: Column(
@@ -163,7 +176,8 @@ class _ProfilePageState extends State<ProfilePage> {
               child: CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                backgroundImage: _profileImage != null ? FileImage(
+                    _profileImage!) : null,
                 child: _profileImage == null
                     ? Icon(Icons.camera_alt, size: 30, color: Colors.white)
                     : null,
@@ -174,7 +188,8 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(username, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(username, style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
                   Text(email, style: TextStyle(color: Colors.grey[700])),
                 ],
               ),
@@ -196,20 +211,26 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("About Me", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF375534))),
+              Text("About Me", style: TextStyle(fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF375534))),
               SizedBox(height: 8),
-              Text(aboutMe, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+              Text(aboutMe,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700])),
               SizedBox(height: 10),
               SizedBox(
                 width: double.infinity, // ✅ Make the Edit button full width
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 10), // ✅ Bigger button padding
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    // ✅ Bigger button padding
                     side: BorderSide(color: Color(0xFF375534)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => _editAboutMe(),
-                  child: Text("Edit", style: TextStyle(color: Color(0xFF375534), fontSize: 16)), // ✅ Bigger text
+                  child: Text("Edit", style: TextStyle(
+                      color: Color(0xFF375534), fontSize: 16)), // ✅ Bigger text
                 ),
               ),
             ],
@@ -230,23 +251,32 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // ✅ Rounded Corners
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)), // ✅ Rounded Corners
           title: Center(
             child: Text(
               "Edit About Me",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF375534)),
+              style: TextStyle(fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF375534)),
             ),
           ),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // ✅ Wider Dialog
+            width: MediaQuery
+                .of(context)
+                .size
+                .width * 0.8, // ✅ Wider Dialog
             child: TextField(
               controller: _controller,
               maxLines: 5,
-              style: TextStyle(fontSize: 14, color: Colors.black), // ✅ Normal Text Input
+              style: TextStyle(fontSize: 14, color: Colors.black),
+              // ✅ Normal Text Input
               decoration: InputDecoration(
                 hintText: "No description available",
-                hintStyle: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: TextStyle(
+                    color: Colors.grey, fontStyle: FontStyle.italic),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF375534), width: 2),
                   borderRadius: BorderRadius.circular(10),
@@ -262,7 +292,8 @@ class _ProfilePageState extends State<ProfilePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
+              child: Text("Cancel", style: TextStyle(
+                  color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
             ),
             TextButton(
               onPressed: () {
@@ -271,15 +302,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pop(context);
                 setState(() {}); // ✅ Force UI refresh
               },
-              child: Text("Save", style: TextStyle(color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
+              child: Text("Save", style: TextStyle(
+                  color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
             ),
           ],
         );
       },
     );
   }
-
-
 
 
   /// **Edit Profile Button (Placeholder for Future Implementation)**
@@ -289,7 +319,8 @@ class _ProfilePageState extends State<ProfilePage> {
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: Color(0xFF375534)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
           padding: EdgeInsets.symmetric(vertical: 12),
         ),
         onPressed: () {
@@ -302,17 +333,116 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
-  /// **Skills Section**
+  /// **Skills, Education, and Languages with Add Button**
   Widget _buildSkillsSection() {
+    return Container(
+      width: double.infinity, // ✅ Make the section take full width
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSkillsCategory("Key Skills", keySkills, _addNewSkill),
+              SizedBox(height: 12),
+              _buildSkillsCategory("Education/Certifications", certifications, _addNewCertification),
+              SizedBox(height: 12),
+              _buildSkillsCategory("Languages Spoken", languages, _addNewLanguage),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  /// **Reusable Function to Build Each Category**
+  Widget _buildSkillsCategory(String title, List<String> items,
+      Function(String) onAdd) {
+    TextEditingController _controller = TextEditingController();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("My Skills", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF375534))),
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Color(0xFF375534))),
         Wrap(
           spacing: 8.0,
-          children: keySkills.map((skill) => Chip(label: Text(skill), backgroundColor: Colors.green[100])).toList(),
+          runSpacing: 8.0,
+          children: [
+            ...items.map((item) =>
+                Chip(label: Text(item), backgroundColor: Colors.green[100]))
+                .toList(),
+            GestureDetector(
+              onTap: () => _showAddDialog(title, _controller, onAdd),
+              child: Chip(
+                label: Icon(Icons.add, color: Colors.black54),
+                backgroundColor: Colors.grey[300],
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  /// **Show Dialog to Add New Skill, Certification, or Language**
+  void _showAddDialog(String title, TextEditingController controller,
+      Function(String) onAdd) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Center(child: Text("Add $title",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: "Enter $title",
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context),
+                child: Text("Cancel", style: TextStyle(color: Color(0xFF375534)))),
+            TextButton(
+              onPressed: () {
+                if (controller.text
+                    .trim()
+                    .isNotEmpty) {
+                  onAdd(controller.text.trim());
+                  Navigator.pop(context);
+                }
+              },
+              child: Text("Add", style: TextStyle(color: Color(0xFF375534))),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// **Functions to Add New Skills, Certifications, and Languages**
+  void _addNewSkill(String skill) {
+    setState(() {
+      keySkills.add(skill);
+    });
+  }
+
+  void _addNewCertification(String certification) {
+    setState(() {
+      certifications.add(certification);
+    });
+  }
+
+  void _addNewLanguage(String language) {
+    setState(() {
+      languages.add(language);
+    });
   }
 }

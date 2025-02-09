@@ -2,10 +2,14 @@
 from django.urls import path
 from . import views
 
+
 urlpatterns = [
+    path('profile/<int:user_id>/', views.get_profile, name='profile'),
     path('request-password-reset/', views.request_password_reset, name='request_password_reset'),
     path('verify-reset-code/', views.verify_reset_code, name='verify_reset_code'),
     path('reset-password/', views.reset_password, name='reset_password'),
+
+    #path('api/profile/<int:user_id>/', get_profile, name='profile'),
 
 
     path('login/',views.loginPage,name="login"),

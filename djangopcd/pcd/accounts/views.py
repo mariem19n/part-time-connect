@@ -142,29 +142,29 @@ def logoutUser(request):
 @api_view(['GET', 'POST'])
 def loginPage(request):
     if request.method == 'GET':
-        # For GET requests, simply set the CSRF cookie.
+        # ✅ Ensure CSRF token is set
         return JsonResponse({'detail': 'CSRF cookie set'})
 
     if request.method == 'POST':
         try:
-            # Parse the JSON payload from the request body.
+            # ✅ Parse JSON payload from request
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
-        # Ensure both username and password are provided.
+        # ✅ Ensure both username and password are provided
         if not username or not password:
             return JsonResponse({'error': 'Username and password are required.'}, status=400)
 
-        # Attempt to authenticate as a Company account.
+        # ✅ Check if user is a Company
         try:
             company = CompanyRegistration.objects.get(username=username)
             if check_password(password, company.password):
-                # Optionally, set session data or tokens here if needed.
                 return JsonResponse({
                     'message': 'Company login successful',
+                    'id': company.id,  # ✅ Added ID field
                     'username': company.username,
                     'user_type': 'company',
                     'email': company.email,
@@ -173,15 +173,15 @@ def loginPage(request):
                     'photos': company.get_photos()
                 }, status=200)
         except CompanyRegistration.DoesNotExist:
-            pass  # Continue to check for a Job Seeker account.
+            pass  
 
-        # Attempt to authenticate as a Job Seeker account.
+        # ✅ Check if user is a Job Seeker
         try:
             job_seeker = UserRegistration.objects.get(username=username)
             if check_password(password, job_seeker.password):
-                # Optionally, set session data or tokens here if needed.
                 return JsonResponse({
                     'message': 'Job seeker login successful',
+                    'id': job_seeker.id,  # ✅ Added ID field
                     'username': job_seeker.username,
                     'user_type': 'job_seeker',
                     'email': job_seeker.email,
@@ -191,10 +191,34 @@ def loginPage(request):
         except UserRegistration.DoesNotExist:
             pass
 
-        # If no matching account was found or the password did not match.
+        # ❌ If no account is found
         return JsonResponse({'error': 'Invalid username or password'}, status=401)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+##########################################"getprofile >>> Done"
+
+@csrf_exempt  # Disable CSRF for testing (Remove in production)
+@api_view(['GET'])  # ✅ Enforces GET requests only
+def get_profile(request, user_id):
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request method"}, status=405)  # ✅ Uses request.method
+    
+    try:
+        user = UserRegistration.objects.get(id=user_id)
+        return JsonResponse({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            #"location": user.location,
+            "key_skills": user.skills.split(",") if user.skills else []
+        }, status=200)
+    except UserRegistration.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+
 ########################################################################################################### Password Reset Backend >>> Done
 @api_view(['POST'])
 def request_password_reset(request):

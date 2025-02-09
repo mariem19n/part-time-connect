@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import '../commun/password_field.dart';
 import '../commun/Pdf_Upload.dart';
 import 'package:flutter_projects/services/RegistrationUser_service.dart';
+import 'package:flutter_projects/commun/Privacy Policy.dart';
+import 'package:flutter_projects/commun/Terms and Conditions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:flutter/gestures.dart';
 
 
 class RegistrationScreen extends StatefulWidget {
@@ -78,6 +81,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 20),
               TextFormField(
+                cursorColor: Color(0xFF375534),
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Full Name',
@@ -126,6 +130,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                cursorColor: Color(0xFF375534),
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email Address',
@@ -212,20 +217,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         builder: (context) {
                           final skillController = TextEditingController();
                           return AlertDialog(
-                            title: const Text('Add Skill'),
-                            content: TextField(
-                              controller: skillController,
-                              decoration: const InputDecoration(
-                                hintText: 'Enter a skill',
+                            title: Text(
+                              'Add Skill',
+                              textAlign: TextAlign.center, // Centers the title
+                              style: TextStyle(
+                                fontSize: 20, // Reduces the font size
                               ),
-                            ),
+                            ),content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: skillController,
+                                decoration: InputDecoration(
+                                  labelText: 'Enter a skill',
+                                  labelStyle: TextStyle(color: Color(0xFF4B5320)),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF4B5320), width: 2),
+                                  ),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF4B5320), width: 1),
+                                  ),
+                                ),
+                                cursorColor: Color(0xFF4B5320),
+                              ),
+                              SizedBox(height: 20),
+                            ],
+                          ),
                             actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Cancel'),
-                              ),
                               TextButton(
                                 onPressed: () {
                                   if (skillController.text.isNotEmpty &&
@@ -236,7 +254,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   }
                                   Navigator.pop(context);
                                 },
-                                child: const Text('Add'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Color(0xFF4B5320),
+                                ),
+                                child: Text("Add"),
                               ),
                             ],
                           );
@@ -255,6 +276,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   Checkbox(
                     value: _isTermsAccepted,
+                    activeColor: Color(0xFF375534),
                     onChanged: (value) {
                       setState(() {
                         _isTermsAccepted = value ?? false;
@@ -263,27 +285,47 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   Expanded(
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         text: 'I agree to the ',
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.black),
                         children: [
                           TextSpan(
-                            text: '[Terms and Conditions]',
-                            style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                color: Colors.blue),
+                            text: 'Terms and Conditions',
+                            style: const TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: Color(0xFF375534),
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TermsAndConditionsPage(),
+                                  ),
+                                );
+                              },
                           ),
-                          TextSpan(text: ' and '),
+                          const TextSpan(text: ' and '),
                           TextSpan(
-                            text: '[Privacy Policy]',
-                            style: TextStyle(
-                                decoration: TextDecoration.underline,
-                                color: Colors.blue),
+                            text: 'Privacy Policy',
+                            style: const TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: Color(0xFF375534),
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PrivacyPolicyPage(),
+                                  ),
+                                );
+                              },
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
               const SizedBox(height: 16),

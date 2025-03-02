@@ -1,6 +1,9 @@
 from pathlib import Path
 from decouple import config
 
+# print(config('DJANGO_SECRET_KEY'))  # Check if the secret key loads
+# print(config('SENDGRID_API_KEY'))  # Check if the SendGrid API key loads
+
 SECRET_KEY = config('DJANGO_SECRET_KEY')  # Fetch secret key from .env file
 EMAIL_HOST_PASSWORD = config('SENDGRID_API_KEY')  # Fetch SendGrid API key from .env file
 
@@ -10,10 +13,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 DEBUG = True
 
+
 ALLOWED_HOSTS = [
-    '127.0.0.1',    # For local development
-    'localhost',    # Localhost access
-    '10.0.2.2',     # Android Emulator access
+    '127.0.0.1',
+    'localhost',
+    '10.0.2.2',
 ]
 
 INSTALLED_APPS = [
@@ -26,7 +30,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'corsheaders',
-    'accounts',
+    'accounts','jobs','feedback','background_task'
 ]
 
 MIDDLEWARE = [
@@ -40,9 +44,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://10.0.2.2:8000',  # Adresse pour accéder à localhost depuis l'émulateur
-]
+CORS_ALLOWED_ORIGINS = ['http://10.0.2.2:8000',]
+
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = False  # Set to True if using HTTPS
+CSRF_USE_SESSIONS = False
 
 ROOT_URLCONF = 'PartTimeConnect.urls'
 
@@ -70,9 +78,9 @@ EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'apikey'  # Always 'apikey' for SendGrid 
+EMAIL_HOST_USER = 'apikey'  # Always 'apikey' for SendGrid
 EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD  # Use environment variable for SendGrid API key
-DEFAULT_FROM_EMAIL = 'mariem.benamor@ensi-uma.tn'  # Replace with your email address 
+DEFAULT_FROM_EMAIL = 'mariem.benamor@ensi-uma.tn'  # Replace with your email address
 
 DATABASES = {
     'default': {
@@ -104,3 +112,4 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

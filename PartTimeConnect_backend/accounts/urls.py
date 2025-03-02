@@ -12,7 +12,7 @@ urlpatterns = [
     path('logout/',views.logoutUser,name="logout"),
     path('register/', views.registerPage, name='register'),
     path('register_company/' ,views.companyRegistration , name="companyRegistration"),
-    #path('updateProfile/', views.updateProfile, name='updateProfile'),
+    path('profile/<int:user_id>/', views.get_profile, name='profile'),
 ]
 
 

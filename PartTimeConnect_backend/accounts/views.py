@@ -15,6 +15,25 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
+from django.contrib.auth.hashers import check_password
+########################################################################################################### Profile Page 
+@csrf_exempt
+@api_view(['GET'])
+def get_profile(request, user_id):
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        user = UserRegistration.objects.get(id=user_id)
+        return JsonResponse({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            #"location": user.location,
+            "key_skills": user.skills.split(",") if user.skills else []
+        }, status=200)
+    except UserRegistration.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
 ########################################################################################################### Registration_Company Backend >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -126,21 +145,71 @@ def logoutUser(request):
 def loginPage(request):
     if request.method == 'GET':
         return JsonResponse({'detail': 'CSRF cookie set'})
+
     if request.method == 'POST':
         try:
+
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
-
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid username or password'}, status=401)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+
+        if not username or not password:
+            return JsonResponse({'error': 'Username and password are required.'}, status=400)
+        try:
+            company = CompanyRegistration.objects.get(username=username)
+            if check_password(password, company.password):
+                return JsonResponse({
+                    'message': 'Company login successful',
+                    'id': company.id,  # ✅ Added ID field
+                    'username': company.username,
+                    'user_type': 'company',
+                    'email': company.email,
+                    'jobtype': company.jobtype,
+                    'company_description': company.company_description,
+                    'photos': company.get_photos()
+                }, status=200)
+        except CompanyRegistration.DoesNotExist:
+            pass
+        try:
+            job_seeker = UserRegistration.objects.get(username=username)
+            if check_password(password, job_seeker.password):
+                return JsonResponse({
+                    'message': 'Job seeker login successful',
+                    'id': job_seeker.id,  # ✅ Added ID field
+                    'username': job_seeker.username,
+                    'user_type': 'job_seeker',
+                    'email': job_seeker.email,
+                    'skills': job_seeker.skills,
+                    'resumes': job_seeker.get_resumes()
+                }, status=200)
+        except UserRegistration.DoesNotExist:
+            pass
+        return JsonResponse({'error': 'Invalid username or password'}, status=401)
+
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+# @ensure_csrf_cookie  # Ensure CSRF cookie is set for GET requests
+# @csrf_protect  # Add CSRF protection for POST requests
+# @api_view(['GET', 'POST'])
+# def loginPage(request):
+#     if request.method == 'GET':
+#         return JsonResponse({'detail': 'CSRF cookie set'})
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             username = data.get('username')
+#             password = data.get('password')
+
+#             user = authenticate(request, username=username, password=password)
+#             if user is not None:
+#                 login(request, user)
+#                 return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
+#             else:
+#                 return JsonResponse({'error': 'Invalid username or password'}, status=401)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+#     return JsonResponse({'error': 'Invalid request method'}, status=405)
 ########################################################################################################### Password Reset Backend >>> Done
 @api_view(['POST'])
 def request_password_reset(request):

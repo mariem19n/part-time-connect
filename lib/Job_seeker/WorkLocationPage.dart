@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart'; // Import the multi_select_flutter package
 import 'TunisiaMapPage.dart';
+import '../AppColors.dart';
+import 'package:flutter_projects/custom_clippers.dart';
 class Worklocationpage extends StatelessWidget {
   final List<String> tunisiaStates = [
     'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Bizerte',
@@ -21,7 +23,7 @@ class Worklocationpage extends StatelessWidget {
             child: ClipPath(
               clipper: QuarterCircleClipper(),
               child: Container(
-                color: Color(0xFFB7C9A3),
+                color: AppColors.background,
                 width: 400,
                 height: 380,
                 child: Padding(
@@ -53,7 +55,7 @@ class Worklocationpage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 25,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColors.textColor,
                         ),
                       ),
                       Text(
@@ -61,7 +63,7 @@ class Worklocationpage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 25,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColors.textColor,
                         ),
                       ),
                       SizedBox(height:50),
@@ -71,9 +73,9 @@ class Worklocationpage extends StatelessWidget {
                       .map((state) => MultiSelectItem<String>(state, state))
                       .toList(),
                   title: Text("Select States"),
-                  selectedColor: Color(0xFF4B5320),
+                  selectedColor: AppColors.primary,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Color(0xFF4B5320)),
+                    border: Border.all(color: AppColors.primary),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   buttonIcon: Icon(Icons.location_on),
@@ -97,14 +99,14 @@ class Worklocationpage extends StatelessWidget {
                       },
                       child: Text('Choose Location on Map'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Color(0xFF4B5320),
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: AppColors.primary,
                         padding: EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 15,
                         ),
                         side: BorderSide(
-                          color: Color(0xFF4B5320),
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -120,14 +122,14 @@ class Worklocationpage extends StatelessWidget {
                       },
                       child: Text('Continue'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Color(0xFF4B5320),
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: AppColors.primary,
                         padding: EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 15,
                         ),
                         side: BorderSide(
-                          color: Color(0xFF4B5320),
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -148,24 +150,4 @@ class Worklocationpage extends StatelessWidget {
     ),
     );
   }
-}
-
-// Custom clipper for a quarter-circle
-class QuarterCircleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(0, size.height);
-    path.arcToPoint(
-      Offset(size.width, 0),
-      radius: Radius.circular(size.height),
-      clockwise: false,
-    );
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

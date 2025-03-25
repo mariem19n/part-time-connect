@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import 'HomePage.dart';
+import '../AppColors.dart';
 class TunisiaMapPage extends StatefulWidget {
   @override
   _TunisiaMapPageState createState() => _TunisiaMapPageState();
@@ -23,7 +24,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
             "Confirm Selected Locations",
             style: TextStyle(
               fontSize: 22,            // Set the font size
-              color: Colors.black,        // Set the text color (you can change this to any color)
+              color: AppColors.textColor,        // Set the text color (you can change this to any color)
             ),
             textAlign: TextAlign.center,   // Align the text in the center
           ),
@@ -45,7 +46,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                       return ListTile(
                         title: Text(address), // Show the formatted address
                         trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Color(0xFF4B5320)),
+                          icon: Icon(Icons.delete, color: AppColors.primary),
                           onPressed: () {
                             setState(() {
                               preferredLocations.removeAt(i); // Remove the location
@@ -80,7 +81,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
               },
               child: Text(
                 "Add Location",
-                style: TextStyle(color: Color(0xFF4B5320)),
+                style: TextStyle(color: AppColors.primary),
               ),
             ),
             TextButton(
@@ -93,7 +94,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
               },
               child: Text(
                 "Confirm",
-                style: TextStyle(color: Color(0xFF4B5320)),
+                style: TextStyle(color: AppColors.primary),
               ),
             ),
           ],
@@ -146,7 +147,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                       height: 80.0,
                       child: Icon(
                         Icons.location_on,
-                        color: Color(0xFF4B5320),
+                        color: AppColors.primary,
                         size: 40,
                       ),
                     );
@@ -160,13 +161,13 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
             child: ElevatedButton(
               onPressed: showConfirmationDialog, // Open the confirmation dialog
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF4B5320),  // Set the button color to green
+                backgroundColor: AppColors.primary,  // Set the button color to green
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),  // Add padding for better button size
               ),
               child: Text(
                 "Continue",
                 style: TextStyle(
-                  color: Colors.white, // Text color
+                  color: AppColors.secondary, // Text color
                   fontSize: 18.0,  // Font size
                 ),
               ),

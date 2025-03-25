@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../AppColors.dart';
 
 class ResetPasswordDialog extends StatefulWidget {
   final String email;
@@ -37,14 +38,14 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
       // Display success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Password reset successful'),
-        backgroundColor: Color(0xFF4B5320),
+        backgroundColor: AppColors.primary,
       ));
       Navigator.pop(context); // Close the dialog
     } else {
       // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(responseBody['error']),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.errorBackground,
       ));
     }
   }
@@ -66,17 +67,17 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
             controller: passwordController,
             decoration: InputDecoration(
               labelText: 'Enter new password',
-              labelStyle: TextStyle(color: Color(0xFF4B5320)),
-              prefixIcon: Icon(Icons.lock, color: Color(0xFF4B5320)),
+              labelStyle: TextStyle(color: AppColors.primary),
+              prefixIcon: Icon(Icons.lock, color: AppColors.primary),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF4B5320), width: 2), // Green underline when focused
+                borderSide: BorderSide(color: AppColors.primary, width: 2), // Green underline when focused
               ),
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF4B5320), width: 1), // Lighter green when not focused
+                borderSide: BorderSide(color: AppColors.primary, width: 1), // Lighter green when not focused
               ),
             ),
             obscureText: true,
-            cursorColor: Color(0xFF4B5320),
+            cursorColor: AppColors.primary,
           ),
           SizedBox(height: 20),
         ],
@@ -85,8 +86,8 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
         TextButton(
           onPressed: resetPassword,
           style: TextButton.styleFrom(
-            backgroundColor: Color(0xFF4B5320), // Button background color
-            foregroundColor: Colors.white, // Text color
+            backgroundColor: AppColors.primary, // Button background color
+            foregroundColor: AppColors.secondary, // Text color
           ),
           child: Text('Reset Password'),
         ),

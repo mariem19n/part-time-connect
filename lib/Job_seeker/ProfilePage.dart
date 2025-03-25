@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import '../AppColors.dart';
 
 class ProfilePage extends StatefulWidget {
   final int userId; // Unique user ID to fetch profile
@@ -16,7 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true; // Loading state
   String username = "Loading...";
   String email = "Loading...";
-  String aboutMe = "No description available"; // ✅ About Me
+  String aboutMe = "No description available";
   List<String> keySkills = [];
   List<String> certifications = [];
   List<String> languages = [];
@@ -55,34 +56,6 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() => _isLoading = false);
     }
   }
-
-/*
-  /// **Update About Me Section on the Server and in UI**
-  Future<void> _updateAboutMe(String newText) async {
-    final String updateUrl = "http://10.0.2.2:8000/api/profile/${widget.userId}/update_about/";
-
-    try {
-      final response = await http.post(
-        Uri.parse(updateUrl),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"about_me": newText}),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          aboutMe = newText.isEmpty ? "No description available" : newText; // ✅ Ensure UI updates
-        });
-        print("✅ About Me updated successfully!");
-      } else {
-        print("❌ Failed to update About Me. Server Response: ${response.body}");
-      }
-    } catch (error) {
-      print("❌ Error updating About Me: $error");
-    }
-  }
-*/
-
-
   void _updateAboutMe(String newText) {
     setState(() {
       aboutMe = newText.isEmpty
@@ -135,8 +108,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile Page', style: TextStyle(color: Color(0xFF375534))),
-        backgroundColor: Colors.white,
+        title: Text('Profile Page', style: TextStyle(color: AppColors.primary)),
+        backgroundColor: AppColors.secondary,
         elevation: 0,
       ),
       body: SafeArea(
@@ -175,11 +148,11 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 30,
-                backgroundColor: Colors.grey[300],
+                backgroundColor: AppColors.borderlightColor,
                 backgroundImage: _profileImage != null ? FileImage(
                     _profileImage!) : null,
                 child: _profileImage == null
-                    ? Icon(Icons.camera_alt, size: 30, color: Colors.white)
+                    ? Icon(Icons.camera_alt, size: 30, color: AppColors.secondary)
                     : null,
               ),
             ),
@@ -190,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Text(username, style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(email, style: TextStyle(color: Colors.grey[700])),
+                  Text(email, style: TextStyle(color: AppColors.borderdarkColor)),
                 ],
               ),
             ),
@@ -213,10 +186,10 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Text("About Me", style: TextStyle(fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: Color(0xFF375534))),
+                  color: AppColors.primary)),
               SizedBox(height: 8),
               Text(aboutMe,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                  style: TextStyle(fontSize: 14, color: AppColors.borderdarkColor)),
               SizedBox(height: 10),
               SizedBox(
                 width: double.infinity, // ✅ Make the Edit button full width
@@ -224,13 +197,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 10),
                     // ✅ Bigger button padding
-                    side: BorderSide(color: Color(0xFF375534)),
+                    side: BorderSide(color: AppColors.primary),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => _editAboutMe(),
                   child: Text("Edit", style: TextStyle(
-                      color: Color(0xFF375534), fontSize: 16)), // ✅ Bigger text
+                      color: AppColors.primary, fontSize: 16)), // ✅ Bigger text
                 ),
               ),
             ],
@@ -258,7 +231,7 @@ class _ProfilePageState extends State<ProfilePage> {
               "Edit About Me",
               style: TextStyle(fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: Color(0xFF375534)),
+                  color: AppColors.primary),
             ),
           ),
           content: SizedBox(
@@ -269,16 +242,16 @@ class _ProfilePageState extends State<ProfilePage> {
             child: TextField(
               controller: _controller,
               maxLines: 5,
-              style: TextStyle(fontSize: 14, color: Colors.black),
+              style: TextStyle(fontSize: 14, color:AppColors.textColor),
               // ✅ Normal Text Input
               decoration: InputDecoration(
                 hintText: "No description available",
                 hintStyle: TextStyle(
-                    color: Colors.grey, fontStyle: FontStyle.italic),
+                    color: AppColors.borderColor, fontStyle: FontStyle.italic),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10)),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF375534), width: 2),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -293,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text("Cancel", style: TextStyle(
-                  color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
+                  color: AppColors.primary, fontSize: 16)), // ✅ Green Button
             ),
             TextButton(
               onPressed: () {
@@ -303,7 +276,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 setState(() {}); // ✅ Force UI refresh
               },
               child: Text("Save", style: TextStyle(
-                  color: Color(0xFF375534), fontSize: 16)), // ✅ Green Button
+                  color: AppColors.primary, fontSize: 16)), // ✅ Green Button
             ),
           ],
         );
@@ -318,7 +291,7 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Color(0xFF375534)),
+          side: BorderSide(color: AppColors.primary),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12)),
           padding: EdgeInsets.symmetric(vertical: 12),
@@ -327,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
           // TODO: Implement profile editing functionality
           print("Edit Profile button clicked");
         },
-        child: Text("Edit Profile", style: TextStyle(color: Color(0xFF375534))),
+        child: Text("Edit Profile", style: TextStyle(color: AppColors.primary)),
       ),
     );
   }
@@ -367,19 +340,19 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         Text(title, style: TextStyle(fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Color(0xFF375534))),
+            color: AppColors.primary)),
         Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
           children: [
             ...items.map((item) =>
-                Chip(label: Text(item), backgroundColor: Colors.green[100]))
+                Chip(label: Text(item), backgroundColor: AppColors.borderlightColor))
                 .toList(),
             GestureDetector(
               onTap: () => _showAddDialog(title, _controller, onAdd),
               child: Chip(
-                label: Icon(Icons.add, color: Colors.black54),
-                backgroundColor: Colors.grey[300],
+                label: Icon(Icons.add, color: AppColors.textColor),
+                backgroundColor: AppColors.borderlightColor,
               ),
             ),
           ],
@@ -409,7 +382,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context),
-                child: Text("Cancel", style: TextStyle(color: Color(0xFF375534)))),
+                child: Text("Cancel", style: TextStyle(color: AppColors.primary))),
             TextButton(
               onPressed: () {
                 if (controller.text
@@ -419,7 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Navigator.pop(context);
                 }
               },
-              child: Text("Add", style: TextStyle(color: Color(0xFF375534))),
+              child: Text("Add", style: TextStyle(color: AppColors.primary)),
             ),
           ],
         );
@@ -446,3 +419,4 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 }
+

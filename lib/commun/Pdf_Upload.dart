@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../AppColors.dart';
 
 class PdfUpload extends StatefulWidget {
   final Function(List<String>) onFilesSelected;
@@ -46,8 +47,8 @@ class _PdfUploadState extends State<PdfUpload> {
               height: 150,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFFEFEFEF),
-                border: Border.all(color: const Color(0xFF375534), width: 2),
+                color: AppColors.secondary,
+                border: Border.all(color:AppColors.primary, width: 2),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -82,13 +83,13 @@ class _PdfUploadState extends State<PdfUpload> {
                         height: 60,
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFEFEF),
-                          border: Border.all(color: const Color(0xFF375534), width: 2),
+                          color: AppColors.secondary,
+                          border: Border.all(color:AppColors.primary, width: 2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.picture_as_pdf, color: Colors.red),
+                            const Icon(Icons.picture_as_pdf, color:AppColors.errorBackground),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -102,7 +103,7 @@ class _PdfUploadState extends State<PdfUpload> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
+                      icon: const Icon(Icons.close, color:AppColors.errorBackground),
                       onPressed: () => _removeFile(index),
                     ),
                   ],
@@ -116,8 +117,8 @@ class _PdfUploadState extends State<PdfUpload> {
             icon: const Icon(Icons.add),
             label: const Text('Add another PDF'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF375534),
-              foregroundColor: Colors.white,
+              backgroundColor:AppColors.primary,
+              foregroundColor:AppColors.secondary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

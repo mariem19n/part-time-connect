@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../commun/password_field.dart';
-import '../commun/Image_Uploader.dart'; // Import the correct widget
+import '../commun/Image_Uploader.dart';
 import 'package:flutter_projects/services/RegistrationCompany_service.dart';
 import 'package:flutter_projects/commun/Privacy Policy.dart';
 import 'package:flutter_projects/commun/Terms and Conditions.dart';
 import 'dart:io';
 import 'package:flutter/gestures.dart';
+import '../AppColors.dart';
+import 'package:flutter_projects/Job_seeker/HomePage.dart';
 
 
 class RegistrationRecruiter extends StatefulWidget {
@@ -43,6 +45,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
 
   @override
   Widget build(BuildContext context) {
+    //bool isJobSeeker = Provider.of<UserRole>(context).userType == UserType.JobProvider;
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -55,7 +58,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               const Text(
                 'Hi! Let\'s get you registered.',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: AppColors.textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -63,45 +66,45 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               const SizedBox(height: 10),
               const Text(
                 'Please provide the following details.',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: AppColors.textColor),
               ),
               const SizedBox(height: 20),
               TextFormField(
-                cursorColor: Color(0xFF375534),
+                cursorColor: AppColors.primary,
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Company or Organization Name',
                   floatingLabelStyle: const TextStyle(
-                    color: Color(0xFF375534),
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   hintText: 'Enter your Company or Organization name',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
-                    color: Colors.grey,
+                    color: AppColors.borderColor,
                   ),
-                  prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                  prefixIcon: const Icon(Icons.person, color: AppColors.borderColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderSide: const BorderSide(
-                      color: Colors.grey,
+                      color: AppColors.borderColor,
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: const BorderSide(
-                      color: Color(0xFF375534),
+                      color: AppColors.primary,
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 style: const TextStyle(
-                  color: Color(0xFF375534),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
                 validator: (value) {
@@ -116,26 +119,26 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                cursorColor: Color(0xFF375534),
+                cursorColor:AppColors.primary,
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Professional Email Address',
                   floatingLabelStyle: const TextStyle(
-                    color: Color(0xFF375534),
+                    color:AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   hintText: 'Enter your professional email address',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
-                    color: Colors.grey,
+                    color: AppColors.borderColor,
                   ),
-                  prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                  prefixIcon: const Icon(Icons.email, color: AppColors.borderColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF375534), width: 2),
+                    borderSide: const BorderSide(color:AppColors.primary, width: 2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -156,26 +159,26 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               PasswordField(controller: _passwordController),
               const SizedBox(height: 16),
               TextFormField(
-                cursorColor: Color(0xFF375534),
+                cursorColor: AppColors.primary,
                 controller: _companyDescriptionController,
                 decoration: InputDecoration(
                   labelText: 'Company Description',
                   floatingLabelStyle: const TextStyle(
-                    color: Color(0xFF375534),
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   hintText: 'Enter your company description',
                   hintStyle: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
-                    color: Colors.grey,
+                    color: AppColors.borderColor,
                   ),
-                  prefixIcon: const Icon(Icons.business, color: Colors.grey),
+                  prefixIcon: const Icon(Icons.business, color: AppColors.borderColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF375534), width: 2),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -204,7 +207,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 'Job Type',
                 style: TextStyle(fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF375534)),
+                    color:AppColors.primary),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
@@ -215,7 +218,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF375534), width: 2),
+                    borderSide: const BorderSide(color:AppColors.primary, width: 2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
@@ -242,7 +245,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 children: [
                   Checkbox(
                     value: _isTermsAccepted,
-                    activeColor: Color(0xFF375534),
+                    activeColor: AppColors.primary,
                     onChanged: (value) {
                       setState(() {
                         _isTermsAccepted = value ?? false;
@@ -253,13 +256,13 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               child: RichText(
                 text: TextSpan(
                   text: 'I agree to the ',
-                  style: const TextStyle(color: Colors.black),
+                  style: const TextStyle(color: AppColors.textColor),
                   children: [
                     TextSpan(
                       text: 'Terms and Conditions',
                       style: const TextStyle(
                         decoration: TextDecoration.underline,
-                        color: Color(0xFF375534),
+                        color: AppColors.primary,
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
@@ -276,7 +279,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                       text: 'Privacy Policy',
                       style: const TextStyle(
                         decoration: TextDecoration.underline,
-                        color: Color(0xFF375534),
+                        color:AppColors.primary,
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
@@ -298,7 +301,7 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF375534),
+                    backgroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 40, vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -307,24 +310,34 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                   ),
                   onPressed: () async {
                     if (_formKey.currentState!.validate() && _isTermsAccepted && _uploadedPhotos.isNotEmpty) {
-                      await RegistrationCompanyService.registerCompany(
-                        username: _usernameController.text,
-                        email: _emailController.text,
-                        password: _passwordController.text,
-                        jobtype: _selectedJobType,
-                        companyDescription: _companyDescriptionController.text,
-                        photos: _uploadedPhotos,
-                      );
-
-                      print("Données envoyées !");
+                      try {
+                        await RegistrationCompanyService.registerCompany(
+                          username: _usernameController.text,
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                          jobtype: _selectedJobType,
+                          companyDescription: _companyDescriptionController.text,
+                          photos: _uploadedPhotos,
+                        );
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration successful!')));
+                        // Navigate to the home page
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomePage()),
+                        );
+                      } catch (e) {
+                        // Show error message
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      }
                     } else {
-                      print("Veuillez remplir tous les champs obligatoires.");
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all required fields')));
                     }
                   },
                   child: const Text(
                     'Create Account',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.secondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

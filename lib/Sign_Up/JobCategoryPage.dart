@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projects/Job_Provider/Registration_Recruiter.dart';
 import 'package:flutter_projects/Job_seeker/RegistrationScreen.dart';
 import 'package:flutter_projects/Job_seeker/WorkLocationPage.dart';
-
+import 'package:flutter_projects/AppColors.dart';
+import 'package:flutter_projects/custom_clippers.dart';
+import 'package:flutter_projects/UserRole.dart';
+import 'package:provider/provider.dart';
 class JobCategoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Quarter-circle green background in the bottom-right corner
           Align(
             alignment: Alignment.bottomRight,
             child: ClipPath(
               clipper: QuarterCircleClipper(),
               child: Container(
-                color: Color(0xFFB7C9A3), // Match the light green shade
+                color: AppColors.background, // Match the light green shade
                 width: 420, // Adjust size for the quarter-circle
                 height: 400,
                 child: Padding(
@@ -25,7 +27,7 @@ class JobCategoryPage extends StatelessWidget {
                   ),
                   child: Center(
                     child: Image.asset(
-                      'assets/images/part_time_connect_logo.png', // Replace with your logo path
+                      'assets/images/part_time_connect_logo.png',
                       height: 300, // Adjust logo size
                       width: 300,
                     ),
@@ -48,7 +50,7 @@ class JobCategoryPage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColors.textColor,
                         ),
                       ),
                       SizedBox(height: 10),
@@ -57,7 +59,7 @@ class JobCategoryPage extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black54,
+                          color: AppColors.textColor,
                         ),
                       ),
                       SizedBox(height: 20),
@@ -66,22 +68,24 @@ class JobCategoryPage extends StatelessWidget {
                         children: [
                           ElevatedButton(
                             onPressed: () {
+                              Provider.of<UserRole>(context, listen: false).setRole(UserType.JobSeeker);
                               Navigator.push(
                                 context,
                                 //MaterialPageRoute(builder: (context) => Worklocationpage()),
-                                MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) => RegistrationScreen()),
                               );
                             },
                             child: Text('Job Seeker'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Color(0xFF4B5320),
+                              backgroundColor: AppColors.secondary,
+                              foregroundColor: AppColors.primary,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 30,
                                 vertical: 15,
                               ),
                               side: BorderSide(
-                                color: Color(0xFF4B5320),
+                                color: AppColors.primary,
                                 width: 2,
                               ),
                             ),
@@ -89,21 +93,23 @@ class JobCategoryPage extends StatelessWidget {
                           SizedBox(width: 20),
                           ElevatedButton(
                             onPressed: () {
+                              Provider.of<UserRole>(context, listen: false).setRole(UserType.JobProvider);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => RegistrationRecruiter()),
+                                MaterialPageRoute(
+                                   builder: (context) => RegistrationRecruiter()),
                               );
                             },
                             child: Text('Recruiter'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Color(0xFF4B5320),
+                              backgroundColor:AppColors.secondary,
+                              foregroundColor: AppColors.primary,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 30,
                                 vertical: 15,
                               ),
                               side: BorderSide(
-                                color: Color(0xFF4B5320),
+                                color: AppColors.primary,
                                 width: 2,
                               ),
                             ),
@@ -123,22 +129,3 @@ class JobCategoryPage extends StatelessWidget {
   }
 }
 
-// Custom clipper for a quarter-circle
-class QuarterCircleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-    path.moveTo(size.width, size.height); // Start at bottom-right corner
-    path.lineTo(size.width, 0); // Go to the top-right corner
-    path.arcToPoint(
-      Offset(0, size.height), // Bottom-left corner
-      radius: Radius.circular(size.width), // Radius for quarter-circle
-      clockwise: false, // Draw counterclockwise
-    );
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}

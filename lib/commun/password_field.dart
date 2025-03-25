@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../AppColors.dart';
 
 
 // PasswordField Widget
@@ -22,25 +23,25 @@ class _PasswordFieldState extends State<PasswordField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
-          cursorColor: Color(0xFF375534),
+          cursorColor: AppColors.primary,
           controller: widget.controller,
           decoration: InputDecoration(
             labelText: 'Password', // Floating label
             floatingLabelStyle: const TextStyle(
-              color: Color(0xFF375534), // Label color when focused
+              color: AppColors.primary, // Label color when focused
               fontWeight: FontWeight.bold,
             ),
             hintText: 'Enter your password', // Optional hint
             hintStyle: const TextStyle(
               fontSize: 14,
               fontStyle: FontStyle.italic,
-              color: Colors.grey,
+              color: AppColors.borderColor,
             ),
-            prefixIcon: const Icon(Icons.lock, color: Colors.grey), // Lock icon
+            prefixIcon: const Icon(Icons.lock, color: AppColors.borderColor), // Lock icon
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                color: Colors.grey,
+                color: AppColors.borderColor,
               ),
               onPressed: () {
                 setState(() {
@@ -53,14 +54,14 @@ class _PasswordFieldState extends State<PasswordField> {
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: const BorderSide(
-                color: Colors.grey, // Default border color
+                color: AppColors.borderColor, // Default border color
                 width: 2,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: const BorderSide(
-                color: Color(0xFF375534), // Focused state color
+                color: AppColors.primary, // Focused state color
                 width: 2,
               ),
               borderRadius: BorderRadius.circular(16),
@@ -69,7 +70,7 @@ class _PasswordFieldState extends State<PasswordField> {
           ),
           obscureText: !_isPasswordVisible,
           style: const TextStyle(
-            color: Color(0xFF375534), // Input text color
+            color: AppColors.primary, // Input text color
             fontWeight: FontWeight.bold, // Bold text style
           ),
           validator: (value) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'Verify Code Dialog (Enter Code).dart';
+import 'package:flutter_projects/AppColors.dart';
 
 class ForgotPasswordDialog extends StatefulWidget {
   @override
@@ -29,7 +30,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       // Handle success
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(responseBody['message']),
-        backgroundColor: Color(0xFF4B5320),
+        backgroundColor: AppColors.primary,
       ));
 
       // Close the ForgotPasswordDialog
@@ -46,13 +47,13 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       // Email not found case
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Email not found. Please check and try again.'),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.errorBackground,
       ));
     } else {
       // Handle other errors
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('An error occurred. Please try again later.'),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.errorBackground,
       ));
     }
   } // This is where you were missing the closing brace
@@ -71,24 +72,24 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         controller: emailController,
         decoration: InputDecoration(
           labelText: 'Enter your email',
-          labelStyle: TextStyle(color: Color(0xFF4B5320)),
-          prefixIcon: Icon(Icons.email, color: Color(0xFF4B5320)),
+          labelStyle: TextStyle(color: AppColors.primary),
+          prefixIcon: Icon(Icons.email, color: AppColors.primary),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF4B5320), width: 2), // Green underline when focused
+            borderSide: BorderSide(color: AppColors.primary, width: 2), // Green underline when focused
           ),
           enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF4B5320), width: 1), // Lighter green when not focused
+            borderSide: BorderSide(color: AppColors.primary, width: 1), // Lighter green when not focused
           ),
         ),
         obscureText: false,
-        cursorColor: Color(0xFF4B5320),
+        cursorColor: AppColors.primary,
       ),
       actions: [
         TextButton(
           onPressed: requestPasswordReset,
           style: TextButton.styleFrom(
-            backgroundColor: Color(0xFF4B5320), // Button background color
-            foregroundColor: Colors.white, // Text color
+            backgroundColor: AppColors.primary, // Button background color
+            foregroundColor: AppColors.secondary, // Text color
           ),
           child: Text('Submit'),
         ),

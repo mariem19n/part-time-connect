@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'JobCategoryPage.dart';
 import 'package:flutter_projects/Log_In/Log_In_Screen.dart';
+import 'package:flutter_projects/AppColors.dart';
+import 'package:flutter_projects/custom_button.dart'; // Import the CustomButton
+
 class SecondWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.secondary,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
@@ -19,7 +22,7 @@ class SecondWelcomeScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 30.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.textColor,
                     fontFamily: 'Quicksand-Bold',
                   ),
                   textAlign: TextAlign.center,
@@ -32,7 +35,7 @@ class SecondWelcomeScreen extends StatelessWidget {
                   'Easily find part-time jobs, freelance opportunities, and gigs near you.',
                   style: TextStyle(
                     fontSize: 18.0,
-                    color: Colors.black,
+                    color: AppColors.textColor,
                     fontFamily: 'Quicksand-Regular',
                   ),
                   textAlign: TextAlign.center,
@@ -45,7 +48,7 @@ class SecondWelcomeScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20.0,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppColors.textColor,
                   fontFamily: 'Quicksand-SemiBold',
                 ),
               ),
@@ -66,97 +69,29 @@ class SecondWelcomeScreen extends StatelessWidget {
                 'Flexible: Work at your own pace and according to your preferences.',
               ),
               Spacer(),
-              // Boutons Continue et Skip
               Center(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Bouton Continue
-                    Container(
-                      height: 50.0,  // Set a fixed height for both buttons
-                      margin: EdgeInsets.symmetric(vertical: 6.0),
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => JobCategoryPage()),
-                          );
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
-                              if (states.contains(MaterialState.pressed)) {
-                                return Color(0xFF4B5320); // Green fill when pressed
-                              }
-                              return Colors.white; // White fill by default
-                            },
-                          ),
-                          foregroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
-                              if (states.contains(MaterialState.pressed)) {
-                                return Colors.white; // White text when pressed
-                              }
-                              return Color(0xFF4B5320); // Green text by default
-                            },
-                          ),
-                          side: MaterialStateProperty.all(
-                            BorderSide(color: Color(0xFF4B5320)), // Green border
-                          ),
-                          shape: MaterialStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          'Continue',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
+                    // Bouton Continue using CustomButton
+                    CustomButton(
+                      text: 'Continue',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => JobCategoryPage()),
+                        );
+                      },
                     ),
-                    // Bouton Skip
-                    Container(
-                      height: 50.0,  // Same height as Continue button
-                      margin: EdgeInsets.symmetric(vertical: 6.0),
-                      child: TextButton(
-                        onPressed: () {
-                          // Navigate to the sign-up page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => LogInPage()),
-                          );
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
-                              if (states.contains(MaterialState.pressed)) {
-                                return Color(0xFF4B5320); // Green fill when pressed
-                              }
-                              return Colors.white; // White fill by default
-                            },
-                          ),
-                          foregroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
-                              if (states.contains(MaterialState.pressed)) {
-                                return Colors.white; // White text when pressed
-                              }
-                              return Color(0xFF4B5320); // Green text by default
-                            },
-                          ),
-                          side: MaterialStateProperty.all(
-                            BorderSide(color: Color(0xFF4B5320)), // Green border
-                          ),
-                          shape: MaterialStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          'Skip',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
+                    // Bouton Skip using CustomButton
+                    CustomButton(
+                      text: 'Skip',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LogInPage()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -178,7 +113,7 @@ class SecondWelcomeScreen extends StatelessWidget {
           Icon(
             Icons.circle,
             size: 8.0,
-            color: Colors.black,
+            color: AppColors.textColor,
           ),
           SizedBox(width: 8.0),
           Expanded(
@@ -186,7 +121,7 @@ class SecondWelcomeScreen extends StatelessWidget {
               text,
               style: TextStyle(
                 fontSize: 18.0,
-                color: Colors.black,
+                color: AppColors.textColor,
                 fontFamily: 'Quicksand-Regular',
               ),
             ),

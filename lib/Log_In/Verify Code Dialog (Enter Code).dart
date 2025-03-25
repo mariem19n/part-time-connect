@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'Password Reset Screen.dart';
+import '../AppColors.dart';
+
 class ResetCodeDialog extends StatefulWidget {
   final String email;
 
@@ -31,7 +33,7 @@ class _ResetCodeDialogState extends State<ResetCodeDialog> {
       // Display success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Code verified successfully'),
-        backgroundColor: Color(0xFF4B5320),
+        backgroundColor: AppColors.primary,
       ));
 
       // Close the ResetCodeDialog
@@ -46,7 +48,7 @@ class _ResetCodeDialogState extends State<ResetCodeDialog> {
       // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(responseBody['error']),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.errorBackground,
       ));
     }
   }
@@ -65,24 +67,24 @@ class _ResetCodeDialogState extends State<ResetCodeDialog> {
         controller: codeController,
         decoration: InputDecoration(
           labelText: 'Enter the 6-digit code',
-          labelStyle: TextStyle(color: Color(0xFF4B5320)),
-          prefixIcon: Icon(Icons.lock, color: Color(0xFF4B5320)),
+          labelStyle: TextStyle(color: AppColors.primary),
+          prefixIcon: Icon(Icons.lock, color: AppColors.primary),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF4B5320), width: 2), // Green underline when focused
+            borderSide: BorderSide(color: AppColors.primary, width: 2), // Green underline when focused
           ),
           enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF4B5320), width: 1), // Lighter green when not focused
+            borderSide: BorderSide(color: AppColors.primary, width: 1), // Lighter green when not focused
           ),
         ),
         obscureText: true,
-        cursorColor: Color(0xFF4B5320),
+        cursorColor: AppColors.primary,
       ),
       actions: [
         TextButton(
           onPressed: verifyCode,
           style: TextButton.styleFrom(
-            backgroundColor: Color(0xFF4B5320), // Button background color
-            foregroundColor: Colors.white, // Text color
+            backgroundColor: AppColors.primary, // Button background color
+            foregroundColor: AppColors.secondary, // Text color
           ),
           child: Text('Verify'),
         ),

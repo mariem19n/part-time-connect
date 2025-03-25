@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../AppColors.dart';
 
 class ImageUploader extends StatefulWidget {
   final Function(List<File>) onImagesSelected;
@@ -60,11 +61,11 @@ class _ImageUploaderState extends State<ImageUploader> {
                       onTap: () => _removeImage(index),
                       child: CircleAvatar(
                         radius: 12,
-                        backgroundColor: Colors.red,
+                        backgroundColor: AppColors.errorBackground,
                         child: Icon(
                           Icons.close,
                           size: 16,
-                          color: Colors.white,
+                          color: AppColors.secondary,
                         ),
                       ),
                     ),
@@ -78,10 +79,10 @@ class _ImageUploaderState extends State<ImageUploader> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: AppColors.borderColor),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.add, size: 30, color: Colors.grey),
+                child: Icon(Icons.add, size: 30, color: AppColors.borderColor),
               ),
             ),
           ],

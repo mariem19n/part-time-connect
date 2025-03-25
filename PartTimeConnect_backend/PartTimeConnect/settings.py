@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+import os
 
 # print(config('DJANGO_SECRET_KEY'))  # Check if the secret key loads
 # print(config('SENDGRID_API_KEY'))  # Check if the SendGrid API key loads
@@ -13,6 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 DEBUG = True
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -30,7 +33,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'corsheaders',
-    'accounts','jobs','feedback','background_task'
+    'accounts','jobs','feedback','background_task','django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -69,6 +72,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'PartTimeConnect.wsgi.application'
 
@@ -112,4 +116,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
 

@@ -35,7 +35,7 @@ class Job(models.Model):
     popularity_score = models.FloatField(default=0)
 
     def __str__(self):
-        return f"{self.title} - {self.company.name}"
+        return f"{self.title} - {self.company.username}"
 
     def update_popularity_score(self):
         """

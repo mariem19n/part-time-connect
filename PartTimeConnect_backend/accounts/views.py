@@ -47,6 +47,7 @@ def companyRegistration(request):
             jobtype = request.POST.get("jobtype", "")
             company_description = request.POST.get('company_description', '')
             photos = request.FILES.getlist('photo')
+            user_type = request.POST.get('user_type')
 
             # Validate required fields
             if not username or not email or not password or not jobtype or not photos or not company_description:
@@ -83,31 +84,54 @@ def companyRegistration(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 ########################################################################################################### Registration_User Backend >>> Done
+from django.core.files.storage import FileSystemStorage
+from django.contrib.auth.hashers import make_password
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+import traceback  # Add this import for better error logging
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def registerPage(request):
     if request.method == 'POST':
         try:
-
+            print("Received POST request for registration.")
             # Get form data from request
-            username = request.POST.get('username')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
-            skills = request.POST.get("skills", "")
+            data = request.POST
+            username = data.get('username')
+            email = data.get('email')
+            password = data.get('password')
+            skills = data.get("skills", "")
             resumes = request.FILES.getlist('resume')
+            user_type = data.get('user_type')
+
+            print(f"Username: {username}, Email: {email}, Skills: {skills}")
+            print(f"Number of resumes uploaded: {len(resumes)}")
 
             # Validate required fields
-            if not username or not email or not password or not skills or not resumes:
-                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+            required_fields = ['username', 'email', 'password', 'skills']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields or not resumes:
+                print(f"Validation failed: Missing fields: {missing_fields}")
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Missing required fields: {", ".join(missing_fields)}'
+                }, status=400)
 
             # Hash the password
             hashed_password = make_password(password)
+            print("Password hashed successfully.")
 
             # Save resumes to the media directory and store their paths
             saved_files = []
+            fs = FileSystemStorage()
             for resume in resumes:
-                resume_path = default_storage.save(f"resumes/{resume.name}", resume)
-                saved_files.append(resume_path)
+                print(f"Processing resume: {resume.name}")
+                filename = fs.save(f"resumes/{resume.name}", resume)
+                saved_files.append(filename)
+                print(f"Resume saved at: {filename}")
 
             # Create and save the UserRegistration object
             user_registration = UserRegistration(
@@ -116,8 +140,17 @@ def registerPage(request):
                 password=hashed_password,
                 skills=skills,
             )
-            user_registration.set_resumes(saved_files)  # Store resume paths as a JSON string
+            print("UserRegistration object created.")
+            
+            # Store resume paths
+            if hasattr(user_registration, 'set_resumes'):
+                user_registration.set_resumes(saved_files)
+            else:
+                user_registration.resumes = json.dumps(saved_files)
+                
+            print("Resume paths stored in UserRegistration object.")
             user_registration.save()
+            print("UserRegistration object saved to the database.")
 
             return JsonResponse({
                 'status': 'success',
@@ -126,11 +159,77 @@ def registerPage(request):
             }, status=201)
 
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            # Proper error logging
+            print(f"Exception occurred: {str(e)}")
+            traceback.print_exc()  # This will print the full traceback
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An error occurred during registration'
+            }, status=500)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    }, status=405)
+# @csrf_exempt
+# @require_http_methods(["POST"])
+# def registerPage(request):
+#     if request.method == 'POST':
+#         try:
+#             print("Received POST request for registration.")
+#             # Get form data from request
+#             username = request.POST.get('username')
+#             email = request.POST.get('email')
+#             password = request.POST.get('password')
+#             skills = request.POST.get("skills", "")
+#             resumes = request.FILES.getlist('resume')
+#             user_type = request.POST.get('user_type')
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+#             print(f"Username: {username}, Email: {email}, Skills: {skills}")
+#             print(f"Number of resumes uploaded: {len(resumes)}")
 
-########################################################################################################### Log_Out Backend >>> Failed
+#             # Validate required fields
+#             if not username or not email or not password or not skills or not resumes:
+#                 print("Validation failed: All fields are required.")
+#                 return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+
+#             # Hash the password
+#             hashed_password = make_password(password)
+#             print("Password hashed successfully.")
+
+#             # Save resumes to the media directory and store their paths
+#             saved_files = []
+#             for resume in resumes:
+#                 print(f"Processing resume: {resume.name}")
+#                 resume_path = default_storage.save(f"resumes/{resume.name}", resume)
+#                 saved_files.append(resume_path)
+#                 print(f"Resume saved at: {resume_path}")
+
+#             # Create and save the UserRegistration object
+#             user_registration = UserRegistration(
+#                 username=username,
+#                 email=email,
+#                 password=hashed_password,
+#                 skills=skills,
+#             )
+#             print("UserRegistration object created.")
+#             user_registration.set_resumes(saved_files)  # Store resume paths as a JSON string
+#             print("Resume paths stored in UserRegistration object.")
+#             user_registration.save()
+#             print("UserRegistration object saved to the database.")
+
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'message': 'User registered successfully!',
+#                 'files': saved_files
+#             }, status=201)
+
+#         except Exception as e:
+#             print(f"Exception occurred: {str(e)}")
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+########################################################################################################### Log_Out Backend >>> Done
 @csrf_protect  # Add CSRF protection explicitly
 @login_required(login_url='login')
 def logoutUser(request):
@@ -143,73 +242,66 @@ def logoutUser(request):
 @csrf_protect  # Add CSRF protection for POST requests
 @api_view(['GET', 'POST'])
 def loginPage(request):
+    print("Login attempt received")  # Log de début
     if request.method == 'GET':
         return JsonResponse({'detail': 'CSRF cookie set'})
 
     if request.method == 'POST':
         try:
-
+            print("Parsing request body...")
             data = json.loads(request.body)
             username = data.get('username')
             password = data.get('password')
+            print(f"Received username: {username}, password: {'***' if password else 'None'}")
         except json.JSONDecodeError:
+            print("Error: Invalid JSON payload")
             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
 
         if not username or not password:
+            print("Error: Missing username or password")
             return JsonResponse({'error': 'Username and password are required.'}, status=400)
         try:
+            print(f"Checking company login for {username}...")
             company = CompanyRegistration.objects.get(username=username)
+            print("Company found, verifying password...")
             if check_password(password, company.password):
+                print("Company login successful!")
                 return JsonResponse({
                     'message': 'Company login successful',
                     'id': company.id,  # ✅ Added ID field
                     'username': company.username,
-                    'user_type': 'company',
+                    'user_type': 'JobProvider',
                     'email': company.email,
                     'jobtype': company.jobtype,
                     'company_description': company.company_description,
                     'photos': company.get_photos()
+                    #'photos': []  # Instead of company.get_photos()
                 }, status=200)
         except CompanyRegistration.DoesNotExist:
             pass
         try:
+            print(f"Checking job seeker login for {username}...")
             job_seeker = UserRegistration.objects.get(username=username)
+            print("Job seeker found, verifying password...")
             if check_password(password, job_seeker.password):
+                print("Job seeker login successful!")
                 return JsonResponse({
                     'message': 'Job seeker login successful',
                     'id': job_seeker.id,  # ✅ Added ID field
                     'username': job_seeker.username,
-                    'user_type': 'job_seeker',
+                    'user_type': 'JobSeeker',
                     'email': job_seeker.email,
                     'skills': job_seeker.skills,
-                    'resumes': job_seeker.get_resumes()
+                    'resumes': job_seeker.get_resumes
                 }, status=200)
         except UserRegistration.DoesNotExist:
+            print(f"No job seeker found with username: {username}")
             pass
+        print("Error: Invalid username or password")
         return JsonResponse({'error': 'Invalid username or password'}, status=401)
-
+    print("Error: Invalid request method")
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-# @ensure_csrf_cookie  # Ensure CSRF cookie is set for GET requests
-# @csrf_protect  # Add CSRF protection for POST requests
-# @api_view(['GET', 'POST'])
-# def loginPage(request):
-#     if request.method == 'GET':
-#         return JsonResponse({'detail': 'CSRF cookie set'})
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             username = data.get('username')
-#             password = data.get('password')
 
-#             user = authenticate(request, username=username, password=password)
-#             if user is not None:
-#                 login(request, user)
-#                 return JsonResponse({'message': 'Login successful', 'username': user.username}, status=200)
-#             else:
-#                 return JsonResponse({'error': 'Invalid username or password'}, status=401)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-#     return JsonResponse({'error': 'Invalid request method'}, status=405)
 ########################################################################################################### Password Reset Backend >>> Done
 @api_view(['POST'])
 def request_password_reset(request):

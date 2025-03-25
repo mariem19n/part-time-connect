@@ -13,3 +13,4 @@ venv/
 
 # Database
 db.sqlite3
+-e "media/\ndebug.log\nphotos/\nresumes/\n*.pyc" 

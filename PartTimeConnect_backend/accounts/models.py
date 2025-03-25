@@ -18,6 +18,7 @@ class CompanyRegistration(models.Model):
     jobtype = models.CharField(max_length=200)
     company_description = models.TextField(null=True, blank=True)
     photos = models.TextField(null=True, blank=True)  # Store photo paths as a JSON string
+    user_type = models.CharField(max_length=20, default='JobProvider')  # Always 'JobProvider'
 
     def __str__(self):
         return self.username
@@ -37,6 +38,8 @@ class UserRegistration(models.Model):
     password = models.CharField(max_length=128)
     skills = models.CharField(max_length=200)
     resumes = models.TextField(null=True, blank=True)  # Store resume paths as a JSON string
+    user_type = models.CharField(max_length=20, default='JobSeeker')  # Default to 'JobSeeker'
+
     def __str__(self):
         return self.username
 
@@ -44,6 +47,7 @@ class UserRegistration(models.Model):
         """Store resume paths as a JSON string."""
         self.resumes = json.dumps(resume_paths)
 
+    #@property
     def get_resumes(self):
         """Retrieve resume paths as a list."""
         return json.loads(self.resumes) if self.resumes else []

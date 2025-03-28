@@ -16,7 +16,11 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
 from django.contrib.auth.hashers import check_password
-########################################################################################################### Profile Page 
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
+
+########################################################################################################### Profile Page
 @csrf_exempt
 @api_view(['GET'])
 def get_profile(request, user_id):
@@ -91,6 +95,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 import traceback  # Add this import for better error logging
+from rest_framework.permissions import AllowAny
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -245,7 +250,6 @@ def loginPage(request):
     print("Login attempt received")  # Log de début
     if request.method == 'GET':
         return JsonResponse({'detail': 'CSRF cookie set'})
-
     if request.method == 'POST':
         try:
             print("Parsing request body...")
@@ -266,6 +270,10 @@ def loginPage(request):
             print("Company found, verifying password...")
             if check_password(password, company.password):
                 print("Company login successful!")
+                # You might need to create or associate a User model for token generation.
+                user = User.objects.get_or_create(username=company.username)[0]  # Create a User if not found
+                token, created = Token.objects.get_or_create(user=user)
+                print(f"Generated token: {token.key}")  # Debug line in Django
                 return JsonResponse({
                     'message': 'Company login successful',
                     'id': company.id,  # ✅ Added ID field
@@ -274,8 +282,9 @@ def loginPage(request):
                     'email': company.email,
                     'jobtype': company.jobtype,
                     'company_description': company.company_description,
-                    'photos': company.get_photos()
+                    'photos': company.get_photos(),
                     #'photos': []  # Instead of company.get_photos()
+                    'token': token.key
                 }, status=200)
         except CompanyRegistration.DoesNotExist:
             pass
@@ -285,6 +294,10 @@ def loginPage(request):
             print("Job seeker found, verifying password...")
             if check_password(password, job_seeker.password):
                 print("Job seeker login successful!")
+                # Generate token
+                user = User.objects.get_or_create(username=job_seeker.username)[0]
+                token, created = Token.objects.get_or_create(user=user)
+                print(f"Generated token: {token.key}")  # Debug line in Django
                 return JsonResponse({
                     'message': 'Job seeker login successful',
                     'id': job_seeker.id,  # ✅ Added ID field
@@ -292,7 +305,8 @@ def loginPage(request):
                     'user_type': 'JobSeeker',
                     'email': job_seeker.email,
                     'skills': job_seeker.skills,
-                    'resumes': job_seeker.get_resumes
+                    'resumes': job_seeker.get_resumes(),
+                    'token': token.key
                 }, status=200)
         except UserRegistration.DoesNotExist:
             print(f"No job seeker found with username: {username}")

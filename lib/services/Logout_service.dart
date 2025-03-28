@@ -44,6 +44,8 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 302) {
         // Clear the user ID from local storage
         await clearUserId();
+        // Clear stored cookies (CSRF token and session)
+        await cookieJar.deleteAll();
         // Reset the provider state
         Provider.of<UserRole>(context, listen: false).clearUserRole();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

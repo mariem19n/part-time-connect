@@ -28,10 +28,10 @@ class _LogInPageState extends State<LogInPage> {
   void validateLogin() async {
     String username = usernameController.text;
     String password = passwordController.text;
-
     try {
       final csrfToken = await getCsrfToken(cookieJar);
       if (csrfToken == null) {
+        print("❌ CSRF Token is null.");
         print(" CSRF Token is null.");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Failed to retrieve CSRF token. Please try again.'),
@@ -39,50 +39,44 @@ class _LogInPageState extends State<LogInPage> {
         ));
         return;
       }
-
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/login/'), // Check if this endpoint is correct
+        Uri.parse('http://10.0.2.2:8000/api/login/'),
         headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
         body: json.encode({'username': username, 'password': password}),
-      );
-
-      print("📡 Status Code: ${response.statusCode}");
+      );      print("📡 Status Code: ${response.statusCode}");
       print("📡 Response Body: ${response.body}");
-
       final responseBody = json.decode(response.body);
-
       if (response.statusCode == 200) {
         // Extract user data from response
         final int id = responseBody['id']!;
         final String userTypeString = responseBody['user_type']!;
-
+        final String token = responseBody['token'];
+        if (token == null) {
+          throw Exception('Invalid Token received from server');
+        }
         // Validate backend response
         if (id == null || userTypeString == null) {
           throw Exception('Invalid user data received from server');
         }
-
-        // Persist user data
+        await storeToken(token);
         await saveUserId(id);
         await saveUserType(userTypeString);
-
         // Convert to enum and update provider
         final UserType userType = userTypeString == "JobProvider"
             ? UserType.JobProvider
             : UserType.JobSeeker;
-
         Provider.of<UserRole>(context, listen: false).setRole(userType);
-
         Navigator.pushReplacement(
           context,
-          //MaterialPageRoute(builder: (context) => ProfilePage(userId: id)),
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
         final responseBody = json.decode(response.body);
-        print(" Error Response: ${responseBody['error'] ?? 'Unknown error'}");
-
+        String errorMessage = responseBody['detail'] ??
+            responseBody['error'] ??
+            'An error occurred. Please try again later.';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(responseBody['error'] ?? 'An error occurred. Please try again later.'),
+          content: Text(errorMessage),
           backgroundColor: AppColors.errorBackground,
         ));
       }

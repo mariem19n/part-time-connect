@@ -8,5 +8,6 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('api/', include('accounts.urls')),
     path("api/jobs/", include("jobs.urls")),
+    path('rec/', include('popularity_recommendation.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

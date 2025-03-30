@@ -1,0 +1,16 @@
+# Byte-compiled files
+*.pyc
+__pycache__/
+
+# Secret settings file
+settings.py
+
+# Environment files
+.env
+
+# Virtual environment
+venv/
+
+# Database
+db.sqlite3
+-e "media/\ndebug.log\nphotos/\nresumes/\n*.pyc" 

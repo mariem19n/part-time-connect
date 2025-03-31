@@ -1,9 +1,94 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Job, JobInteraction
-from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-##################################################################List job offer posted by company X >> Done
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from accounts.models import CompanyRegistration
+import json
+###########################################################################POST job offer by company X >> Done
+@csrf_exempt  # Remember to remove this in production!
+@require_POST
+def create_job_offer(request):
+    try:
+        print("Received job offer submission request")
+        
+        # Get company username from request
+        company_username = request.POST.get('company_username')
+        if not company_username:
+            print("Missing company username")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Company username is required'
+            }, status=400)
+        
+        # Get company profile
+        try:
+            company = CompanyRegistration.objects.get(username=company_username)
+            print(f"Company found: {company.username}")
+        except CompanyRegistration.DoesNotExist:
+            print("Company not found")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Company not found'
+            }, status=404)
+
+        # Validate required fields
+        required_fields = ['title', 'description']
+        for field in required_fields:
+            if not request.POST.get(field):
+                print(f"Missing required field: {field}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Missing required field: {field}'
+                }, status=400)
+
+        # Create job
+        job = Job(
+            company=company,
+            title=request.POST['title'],
+            description=request.POST['description'],
+            location=request.POST.get('location', 'Remote'),
+            salary=float(request.POST['salary']) if request.POST.get('salary') else None,
+            is_salary_negotiable=request.POST.get('is_salary_negotiable', 'false').lower() == 'true',
+            working_hours=request.POST.get('working_hours', 'Flexible'),
+            duration=int(request.POST.get('duration', 0)),
+            contract_type=request.POST.get('contract_type', 'Part-Time')
+        )
+
+        # Handle JSON fields
+        json_fields = ['requirements', 'benefits', 'responsibilities']
+        for field in json_fields:
+            field_data = request.POST.get(field)
+            if field_data:
+                try:
+                    setattr(job, field, json.loads(field_data))
+                    print(f"Processed {field} as JSON")
+                except json.JSONDecodeError:
+                    setattr(job, field, field_data.split('\n'))
+                    print(f"Processed {field} as plain text")
+
+        # Handle file upload
+        if 'contract_pdf' in request.FILES:
+            job.contract_pdf = request.FILES['contract_pdf']
+            print("PDF contract attached")
+
+        job.save()
+        print(f"Job created successfully with ID: {job.id}")
+
+        return JsonResponse({
+            'status': 'success',
+            'job_id': job.id,
+            'message': 'Job offer created successfully'
+        }, status=201)
+
+    except Exception as e:
+        print(f"Error creating job offer: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Internal server error'
+        }, status=500)
+###########################################################################List job offer posted by company X >> Done
 @require_GET
 def job_list(request):
     try:

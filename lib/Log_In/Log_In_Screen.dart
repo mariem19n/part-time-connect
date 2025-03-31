@@ -51,6 +51,7 @@ class _LogInPageState extends State<LogInPage> {
         final int id = responseBody['id']!;
         final String userTypeString = responseBody['user_type']!;
         final String token = responseBody['token'];
+        final String username = responseBody['username'];
         if (token == null) {
           throw Exception('Invalid Token received from server');
         }
@@ -61,6 +62,8 @@ class _LogInPageState extends State<LogInPage> {
         await storeToken(token);
         await saveUserId(id);
         await saveUserType(userTypeString);
+        await saveUsername(username);
+        print('Login successful - Token: $token, Username: $username');
         // Convert to enum and update provider
         final UserType userType = userTypeString == "JobProvider"
             ? UserType.JobProvider
@@ -137,18 +140,11 @@ class _LogInPageState extends State<LogInPage> {
                   TextField(
                     controller: usernameController,
                     decoration: InputDecoration(
-                      labelText: 'Professional Email Address',
+                      labelText: 'Professional Display Name',
                       labelStyle: TextStyle(color: AppColors.primary),
                       prefixIcon: Icon(
-                        Icons.email,
+                        Icons.person,
                         color: AppColors.primary,
-                      ),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.primary, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.primary, width: 1),
                       ),
                     ),
                   ),
@@ -174,13 +170,6 @@ class _LogInPageState extends State<LogInPage> {
                             _obscureText = !_obscureText;
                           });
                         },
-                      ),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.primary, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.primary, width: 1),
                       ),
                     ),
                   ),
@@ -239,7 +228,7 @@ class _LogInPageState extends State<LogInPage> {
                             ),
                           ),
                           style: TextButton.styleFrom(
-                            backgroundColor: AppColors.primary, // Button background color
+                            backgroundColor: AppColors.primary,
                             foregroundColor: AppColors.secondary,
                             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), // Padding
                             side: BorderSide(

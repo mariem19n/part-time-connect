@@ -34,15 +34,60 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(fontFamily: 'Quicksand'),   // Previously bodyText2
         ),
         inputDecorationTheme: InputDecorationTheme(
+          // Floating label style
+          floatingLabelStyle: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+          // Border styles
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: AppColors.primary), // Green border when focused
+            borderSide: BorderSide(color: AppColors.primary, width: 2), // Green border when focused
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: AppColors.borderdarkColor), // Default border
+            borderSide: BorderSide(color: AppColors.borderdarkColor, width: 1), // Default border
           ),
         ),
+        // Elevated button theme
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.secondary,
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        // Text button theme
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            textStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),/*
+
+        // Outlined button theme (if you use them)
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            textStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),*/
       ),
       debugShowCheckedModeBanner: false,
       home: SplashScreen(), // Start with the splash screen

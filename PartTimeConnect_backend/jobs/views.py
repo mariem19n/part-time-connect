@@ -1,93 +1,131 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Job, JobInteraction
+from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from accounts.models import CompanyRegistration
 import json
-###########################################################################POST job offer by company X >> Done
-@csrf_exempt  # Remember to remove this in production!
-@require_POST
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.http.multipartparser import MultiPartParser, MultiPartParserError
+##########################################################################DELETE job offer created by company X >> Done
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_job_offer(request, job_id):
+    try:
+        # Get authorization header
+        auth_header = request.META.get('HTTP_AUTHORIZATION') or request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Token '):
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
+        token = auth_header.split(' ')[1]
+        # Verify token using DRF TokenAuthentication
+        from rest_framework.authtoken.models import Token
+        try:
+            token_obj = Token.objects.select_related('user').get(key=token)
+            user = token_obj.user
+        except Token.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Invalid token'}, status=401)
+
+        # Get the job
+        try:
+            job = Job.objects.get(id=job_id)
+        except Job.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Job not found'}, status=404)
+        if job.company.username != user.username and not user.is_staff:
+            return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+        job.delete()
+        return JsonResponse({'status': 'success', 'message': 'Job deleted'}, status=200)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+###########################################################################POST and PUT job offer by company X >> Done
+@csrf_exempt
+@require_http_methods(["POST", "PUT"])
 def create_job_offer(request):
     try:
-        print("Received job offer submission request")
-        
-        # Get company username from request
-        company_username = request.POST.get('company_username')
+        print("\n===== Request Data =====")
+        print("Method:", request.method)
+        print("Content-Type:", request.content_type)
+
+        # Manually parse multipart/form-data for PUT requests
+        if request.method == 'PUT' and request.content_type.startswith('multipart/form-data'):
+            try:
+                parser = MultiPartParser(request.META, request, request.upload_handlers)
+                data, files = parser.parse()
+                request.POST = data
+                # We no longer try to set request.FILES manually
+                request._files = files  # Set the files attribute in a valid way
+            except MultiPartParserError as e:
+                print(f"Parser error: {str(e)}")
+                return JsonResponse({'status': 'error', 'message': 'Invalid multipart data'}, status=400)
+
+        print("POST data:", request.POST)
+        print("FILES:", request.FILES)
+        print(f"Received {'update' if request.method == 'PUT' else 'create'} job request")
+
+        # Extract data
+        if 'data' in request.POST:
+            json_data = json.loads(request.POST['data'])
+        else:
+            json_data = request.POST.dict()
+
+        company_username = json_data.get('company_username')
         if not company_username:
-            print("Missing company username")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Company username is required'
-            }, status=400)
-        
-        # Get company profile
+            return JsonResponse({'status': 'error', 'message': 'Company username is required'}, status=400)
+
+        from .models import CompanyRegistration, Job  # Adjust import path as needed
+
         try:
             company = CompanyRegistration.objects.get(username=company_username)
-            print(f"Company found: {company.username}")
         except CompanyRegistration.DoesNotExist:
-            print("Company not found")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Company not found'
-            }, status=404)
+            return JsonResponse({'status': 'error', 'message': 'Company not found'}, status=404)
 
-        # Validate required fields
-        required_fields = ['title', 'description']
-        for field in required_fields:
-            if not request.POST.get(field):
-                print(f"Missing required field: {field}")
-                return JsonResponse({
-                    'status': 'error',
-                    'message': f'Missing required field: {field}'
-                }, status=400)
+        if request.method == 'PUT':
+            job_id = json_data.get('job_id')
+            if not job_id:
+                return JsonResponse({'status': 'error', 'message': 'Job ID is required for updates'}, status=400)
+            try:
+                job = Job.objects.get(id=job_id, company=company)
+            except Job.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Job not found or not owned by company'}, status=404)
+        else:
+            job = Job(company=company)
 
-        # Create job
-        job = Job(
-            company=company,
-            title=request.POST['title'],
-            description=request.POST['description'],
-            location=request.POST.get('location', 'Remote'),
-            salary=float(request.POST['salary']) if request.POST.get('salary') else None,
-            is_salary_negotiable=request.POST.get('is_salary_negotiable', 'false').lower() == 'true',
-            working_hours=request.POST.get('working_hours', 'Flexible'),
-            duration=int(request.POST.get('duration', 0)),
-            contract_type=request.POST.get('contract_type', 'Part-Time')
-        )
+        # Set fields
+        job.title = json_data.get('title', job.title)
+        job.description = json_data.get('description', job.description)
+        job.location = json_data.get('location', job.location)
+        if 'salary' in json_data:
+            job.salary = float(json_data['salary']) if json_data['salary'] else None
+        job.is_salary_negotiable = str(json_data.get('is_salary_negotiable', job.is_salary_negotiable)).lower() == 'true'
+        job.working_hours = json_data.get('working_hours', job.working_hours)
+        if 'duration' in json_data:
+            job.duration = int(json_data['duration']) if json_data['duration'] else None
+        job.contract_type = json_data.get('contract_type', job.contract_type)
 
-        # Handle JSON fields
-        json_fields = ['requirements', 'benefits', 'responsibilities']
-        for field in json_fields:
-            field_data = request.POST.get(field)
-            if field_data:
+        # Parse complex fields
+        for field in ['requirements', 'benefits', 'responsibilities']:
+            if field in json_data:
                 try:
-                    setattr(job, field, json.loads(field_data))
-                    print(f"Processed {field} as JSON")
+                    setattr(job, field, json_data[field] if isinstance(json_data[field], list) else json.loads(json_data[field]))
                 except json.JSONDecodeError:
-                    setattr(job, field, field_data.split('\n'))
-                    print(f"Processed {field} as plain text")
+                    setattr(job, field, str(json_data[field]).split('\n'))
 
-        # Handle file upload
         if 'contract_pdf' in request.FILES:
             job.contract_pdf = request.FILES['contract_pdf']
-            print("PDF contract attached")
 
         job.save()
-        print(f"Job created successfully with ID: {job.id}")
 
         return JsonResponse({
             'status': 'success',
             'job_id': job.id,
-            'message': 'Job offer created successfully'
-        }, status=201)
+            'message': f"Job {'updated' if request.method == 'PUT' else 'created'} successfully"
+        }, status=200 if request.method == 'PUT' else 201)
 
     except Exception as e:
-        print(f"Error creating job offer: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Internal server error'
-        }, status=500)
+        print(f"Error processing job: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': 'Internal server error'}, status=500)
 ###########################################################################List job offer posted by company X >> Done
 @require_GET
 def job_list(request):
@@ -113,7 +151,7 @@ def job_list(request):
         return JsonResponse(job_data, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-##################################################################List job offer details >> Done
+###########################################################################List job offer details >> Done
 @require_GET
 def job_details(request, job_id):
     try:
@@ -143,8 +181,7 @@ def job_details(request, job_id):
         return JsonResponse({'error': 'Job not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-################################################################## Recommendation
-
+###########################################################################Recommendation
 def view_job(request, job_id):
     job = get_object_or_404(Job, id=job_id)
     JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='VIEW')

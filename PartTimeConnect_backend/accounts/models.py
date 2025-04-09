@@ -7,9 +7,6 @@ import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
-
-
-
 ########################################################################################################### Registration_Company Backend Model >>> Done
 class CompanyRegistration(models.Model):
     username = models.CharField(max_length=100)
@@ -30,7 +27,6 @@ class CompanyRegistration(models.Model):
     def get_photos(self):
         """Retrieve photo paths as a list."""
         return json.loads(self.photos) if self.photos else []
-
 ########################################################################################################### Registration_User Backend Model >>> Done
 class UserRegistration(models.Model):
     username = models.CharField(max_length=100)
@@ -56,7 +52,18 @@ class UserProfile(models.Model):  # Stores additional user details
     user = models.OneToOneField(UserRegistration, on_delete=models.CASCADE, related_name="profile")
     full_name = models.CharField(max_length=255, blank=True, default="Unknown")
     phone = models.CharField(max_length=20, null=True, blank=True)
-    location = models.CharField(max_length=255, null=True, blank=True)
+    #location = models.CharField(max_length=255, null=True, blank=True)
+    preferred_locations = models.JSONField(default=list)
+    
+    def add_preferred_location(self, location):
+        if location not in self.preferred_locations:
+            self.preferred_locations.append(location)
+            self.save()
+    
+    def remove_preferred_location(self, location):
+        if location in self.preferred_locations:
+            self.preferred_locations.remove(location)
+            self.save()
     about_me = models.TextField(null=True, blank=True)
     skills = models.JSONField(default=list)
     education_certifications = models.JSONField(default=list)

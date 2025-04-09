@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Job {
   final int id;
   final String title;
@@ -27,21 +29,50 @@ class Job {
     this.contractPdf,
   });
 
-  // Factory constructor to create Job from JSON
   factory Job.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely convert to List<String>
+    List<String> _convertList(dynamic list) {
+      if (list == null) return [];
+      if (list is List) return list.map((e) => e?.toString() ?? '').toList();
+      return [list?.toString() ?? ''];
+    }
+
+    // Handle requirements - always convert to List<String>
+    List<String> requirements = [];
+    if (json['requirements'] != null) {
+      if (json['requirements'] is String) {
+        try {
+          // If it's a JSON string, decode and extract skills
+          final decoded = jsonDecode(json['requirements']);
+          if (decoded is Map) {
+            requirements = _convertList(decoded['skills'] ?? []);
+          } else {
+            requirements = _convertList(decoded);
+          }
+        } catch (e) {
+          requirements = _convertList(json['requirements']);
+        }
+      } else if (json['requirements'] is Map) {
+        // If it's already a map, extract skills
+        requirements = _convertList(json['requirements']['skills'] ?? []);
+      } else {
+        requirements = _convertList(json['requirements']);
+      }
+    }
+
     return Job(
-      id: json['id'],
-      title: json['title'] ?? 'No Title Provided',
-      description: json['description'] ?? '',
-      location: json['location'] ?? 'Remote',
-      salary: (json['salary'] ?? 0.0).toDouble(),
-      workingHours: json['working_hours'] ?? 'Flexible',
-      contractType: json['contract_type'] ?? 'Unknown',
-      duration: json['duration'] ?? 0,
-      requirements: List<String>.from(json['requirements'] ?? []),
-      benefits: List<String>.from(json['benefits'] ?? []),
-      responsibilities: List<String>.from(json['responsibilities'] ?? []),
-      contractPdf: json['contract_pdf'],
+      id: json['id'] as int? ?? 0,
+      title: json['title']?.toString() ?? 'No Title',
+      description: json['description']?.toString() ?? '',
+      location: json['location']?.toString() ?? 'Remote',
+      salary: (json['salary'] as num?)?.toDouble() ?? 0.0,
+      workingHours: json['working_hours']?.toString() ?? 'Flexible',
+      contractType: json['contract_type']?.toString() ?? 'Unknown',
+      duration: json['duration'] as int? ?? 0,
+      requirements: requirements, // Now always List<String>
+      benefits: _convertList(json['benefits']),
+      responsibilities: _convertList(json['responsibilities']),
+      contractPdf: json['contract_pdf']?.toString(),
     );
   }
 }

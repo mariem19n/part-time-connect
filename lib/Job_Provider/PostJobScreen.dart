@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'job.dart';
 import '../AppColors.dart';
 import '../auth_helper.dart';
 import '../commun/Pdf_Upload.dart';
 
 class PostJobScreen extends StatefulWidget {
-  const PostJobScreen({super.key});
+  final Job? existingJob;
+  const PostJobScreen({super.key, this.existingJob});
 
   @override
   State<PostJobScreen> createState() => _PostJobScreenState();
 }
 
 class _PostJobScreenState extends State<PostJobScreen> {
+  String _workingHours = 'Flexible';
   List<String> _uploadedPdfPaths = [];
   final _formKey = GlobalKey<FormState>();
   final _jobTitleController = TextEditingController();
@@ -42,10 +45,65 @@ class _PostJobScreenState extends State<PostJobScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize form fields with existing job data if provided
+    if (widget.existingJob != null) {
+      _initializeFormWithJob(widget.existingJob!);
+    }
+  }
+
+  void _initializeFormWithJob(Job job) {
+    // Parse working hours
+    String fromTime = '18h';
+    String toTime = '23h';
+    String workingHoursDisplay = 'Flexible';
+
+    if (job.workingHours != null && job.workingHours!.contains('to')) {
+      final parts = job.workingHours!.split(' to ');
+      if (parts.length == 2) {
+        fromTime = parts[0].trim();
+        toTime = parts[1].trim();
+        workingHoursDisplay = '$fromTime to $toTime';
+      }
+    }
+
+    // Parse duration
+    String durationDisplay = 'duration';
+    if (job.duration > 0) {
+      durationDisplay = job.duration == 1
+          ? '1 month'
+          : '${job.duration} months';
+    }
+    setState(() {
+      _jobTitleController.text = job.title;
+      _descriptionController.text = job.description;
+      _responsibilitiesController.text = job.responsibilities.join('\n');
+      _skillsController.text = job.requirements.join('\n');
+      _benefitsController.text = job.benefits.join('\n');
+      _location = job.location.toLowerCase();
+      _duration = durationDisplay;
+      _fromTime = fromTime;
+      _toTime = toTime;
+      _workingHours = workingHoursDisplay;
+      _contractType = job.contractType;
+      _salary = job.salary;
+      _salaryUnit = 'per hour'; // Default or parse from existing data
+      // PDF contract
+      if (job.contractPdf != null && job.contractPdf!.isNotEmpty) {
+        _uploadedPdfPaths = [job.contractPdf!];
+      }
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Post a New Job Offer'),
+        title: Text(widget.existingJob == null
+            ? 'Post a New Job Offer'
+            : 'Edit Job Offer'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -408,84 +466,102 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton(
-                        onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
-                            // Get the authentication token
-                            final token = await getToken();
-                            final username = await getUsername();
-                            print('Stored token: $token, username: $username');
-                            if (token == null || username == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please login first')),
-                              );
-                              return;
-                            }
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              final token = await getToken();
+                              final username = await getUsername();
+                              print('DEBUG: Username is $username');
 
-                            // Prepare job details
-                            final jobDetails = {
-                              'company_username': username,
-                              'title': _jobTitleController.text,
-                              'description': _descriptionController.text,
-                              'responsibilities': jsonEncode(_responsibilitiesController.text.split('\n')),
-                              'location': _location,
-                              'duration': _duration == 'duration' ? 0 : int.parse(_duration.split(' ')[0]),
-                              'working_hours': '$_fromTime to $_toTime',
-                              'salary': _salary,
-                              'is_salary_negotiable': false,
-                              'contract_type': _contractType,
-                              'requirements': jsonEncode({
-                                'skills': _skillsController.text.split('\n'),
-                                'experience': _experienceController.text.split('\n')
-                              }),
-                              'benefits': jsonEncode(_benefitsController.text.split('\n')),
-                            };
-
-                            // Create multipart request
-                            var request = http.MultipartRequest(
-                                'POST',
-                                Uri.parse('http://10.0.2.2:8000/api/jobs/offer/')
-                            );
-
-                            // Add headers with the token
-                            request.headers['Authorization'] = 'Bearer $token';
-                            request.headers['Content-Type'] = 'multipart/form-data';
-
-                            // Add fields
-                            jobDetails.forEach((key, value) {
-                              request.fields[key] = value.toString();
-                            });
-
-                            // Add file if exists
-                            if (_uploadedPdfPaths.isNotEmpty) {
-                              var file = await http.MultipartFile.fromPath(
-                                  'contract_pdf',
-                                  _uploadedPdfPaths[0]
-                              );
-                              request.files.add(file);
-                            }
-
-                            // Send request
-                            try {
-                              var response = await request.send();
-                              var responseData = await response.stream.bytesToString();
-
-                              if (response.statusCode == 201) {
+                              if (token == null || username == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Job posted successfully!')),
+                                  const SnackBar(content: Text('Please login first')),
                                 );
-                                Navigator.of(context).pop();
-                              } else {
+                                return;
+                              }
+                              final requirements = {
+                                'skills': _skillsController.text.split('\n')
+                                    .where((s) => s.trim().isNotEmpty)
+                                    .toList(),
+                                'experience': _experienceController.text.split('\n')
+                                    .where((s) => s.trim().isNotEmpty)
+                                    .toList()
+                              };
+
+                              // Prepare the job data as flat fields
+                              final jobData = {
+                                'company_username': username,
+                                'title': _jobTitleController.text,
+                                'description': _descriptionController.text,
+                                'location': _location,
+                                'salary': _salary.toString(),
+                                'is_salary_negotiable': 'false',
+                                'working_hours': '$_fromTime to $_toTime',
+                                'duration': (_duration == 'duration' ? 0 : int.parse(_duration.split(' ')[0])).toString(),
+                                'contract_type': _contractType,
+                                'requirements': jsonEncode(requirements),
+                                'benefits': jsonEncode(_benefitsController.text.split('\n')),
+                                'responsibilities': jsonEncode(_responsibilitiesController.text.split('\n')),
+                                if (widget.existingJob != null) 'job_id': widget.existingJob!.id.toString(),
+                              };
+
+                              // Create request
+                              var request = http.MultipartRequest(
+                                widget.existingJob == null ? 'POST' : 'PUT',
+                                Uri.parse('http://10.0.2.2:8000/api/jobs/offer/'),
+                              );
+
+                              // Add authorization header
+                              request.headers['Authorization'] = 'Bearer $token';
+
+                              // Flatten jobData into individual request fields
+                              jobData.forEach((key, value) {
+                                request.fields[key] = value.toString();
+                              });
+
+                              // Attach PDF if provided
+                              if (_uploadedPdfPaths.isNotEmpty) {
+                                var file = await http.MultipartFile.fromPath(
+                                  'contract_pdf',
+                                  _uploadedPdfPaths[0],
+                                );
+                                request.files.add(file);
+                              }
+
+                              // Debug print
+                              print('Sending job data: $jobData');
+                              if (_uploadedPdfPaths.isNotEmpty) {
+                                print('Attaching PDF: ${_uploadedPdfPaths[0]}');
+                              }
+
+                              try {
+                                var response = await request.send();
+                                var responseData = await response.stream.bytesToString();
+
+                                print('Response status: ${response.statusCode}');
+                                print('Response body: $responseData');
+
+                                if (response.statusCode == 200 || response.statusCode == 201) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(
+                                        widget.existingJob == null
+                                            ? 'Job posted successfully!'
+                                            : 'Job updated successfully!'
+                                    )),
+                                  );
+                                  Navigator.of(context).pop();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: ${jsonDecode(responseData)['message']}')),
+                                  );
+                                }
+                              } catch (e) {
+                                print('Error sending request: $e');
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: ${jsonDecode(responseData)['message']}')),
+                                  SnackBar(content: Text('Error: $e')),
                                 );
                               }
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
                             }
-                          }
-                        },
+                          },
                         child: const Text('Submit Job Offer'),
                       ),
                     ],
@@ -496,11 +572,6 @@ class _PostJobScreenState extends State<PostJobScreen> {
           ],
         ),
       ),
-      /*bottomNavigationBar: const CustomBottomNavBar(
-        isJobSeeker: false,
-        currentIndex: 2, // Assuming "add offer" is at index 2
-        onTap: null, // You'll need to implement navigation
-      ),*/
     );
   }
   void _resetForm() {

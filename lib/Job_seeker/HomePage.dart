@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../UserRole.dart';
 import 'package:flutter_projects/services/recommendation_service.dart';
 import '../recommendation_widgets.dart'; // Make sure this exists
+import '../commun/ChatbotScreen.dart'; // adjust the path as needed
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -138,6 +140,17 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatbotScreen()),
+          );
+        },
+        backgroundColor: Colors.green,
+        child: Icon(Icons.chat_bubble_outline),
+        tooltip: 'Chat with us',
       ),
       bottomNavigationBar: CustomBottomNavBar(
         isJobSeeker: isJobSeeker,

@@ -106,6 +106,27 @@ def get_profile(request, user_id):
         }, status=200)
     except UserRegistration.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
+
+#############################################################################Messagerie search box >>>Done
+from django.http import JsonResponse
+from django.db.models import Q
+
+def search_users(request):
+    query = request.GET.get('q', '')
+    
+    # Search both UserRegistration and CompanyRegistration
+    users = UserRegistration.objects.filter(
+        Q(username__icontains=query) |
+        Q(email__icontains=query)
+    ).values('id', 'username', 'email', 'user_type')[:10]  # Parenthèse fermante ajoutée ici
+    
+    companies = CompanyRegistration.objects.filter(
+        Q(username__icontains=query) |
+        Q(email__icontains=query)
+    ).values('id', 'username', 'email', 'user_type')[:10]  # Parenthèse fermante ajoutée ici
+    
+    results = list(users) + list(companies)
+    return JsonResponse(results, safe=False)
 ########################################################################################################### Registration_Company Backend >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])

@@ -122,6 +122,35 @@ def update_profile_match_score_on_user_change(sender, instance, **kwargs):
     # Defer the execution until after the transaction is committed
     transaction.on_commit(_update_profile_match_score)
 
+# @receiver(post_save, sender=UserProfile)
+# def update_recommendation_score(sender, instance, created, **kwargs):
+#     """
+#     Update the recommendation score when a UserProfile is saved.
+#     Skip if this is a new profile creation to prevent recursion.
+#     """
+#     if created:
+#         return  # Skip for new profiles
+    
+#     def _update_recommendation_score():
+#         # Only proceed if we have actual changes that affect scores
+#         if not any(field in kwargs.get('update_fields', [])
+#                   for field in ['skills', 'education_certifications']):
+#             return
+            
+#         # Get all jobs the user has applied to
+#         applied_jobs = Job.objects.filter(applications__user=instance.user).distinct()
+
+#         # Recalculate the recommendation score for each job
+#         for job in applied_jobs:
+#             instance.calculate_recommendation_score(job)
+
+#         # Save without triggering signals again
+#         UserProfile.objects.filter(pk=instance.pk).update(
+#             previous_recommendation_score=instance.recommendation_score
+#         )
+
+#     transaction.on_commit(_update_recommendation_score)
+
 @receiver(post_save, sender=UserProfile)
 def update_recommendation_score(sender, instance, created, **kwargs):
     """
@@ -132,8 +161,11 @@ def update_recommendation_score(sender, instance, created, **kwargs):
         return  # Skip for new profiles
     
     def _update_recommendation_score():
+        # Get update_fields safely, defaulting to empty list if None
+        update_fields = kwargs.get('update_fields') or []
+        
         # Only proceed if we have actual changes that affect scores
-        if not any(field in kwargs.get('update_fields', [])
+        if not any(field in update_fields
                   for field in ['skills', 'education_certifications']):
             return
             

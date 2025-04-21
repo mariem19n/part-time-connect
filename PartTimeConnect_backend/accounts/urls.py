@@ -17,6 +17,7 @@ urlpatterns = [
     path('profile/<int:user_id>/', views.get_profile, name='profile'),
     path('get-token/', views.generate_token),
     path('update_user_location/', update_user_location, name='update_user_location'),
+    path('search-users/', views.search_users, name='search_users'),
 ]
 
 

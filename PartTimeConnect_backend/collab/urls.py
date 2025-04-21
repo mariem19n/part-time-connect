@@ -1,6 +1,14 @@
+#from django.urls import path
+#from .views import recommendations_api
+
+#urlpatterns = [
+#    path('recommendations/', recommendations_api, name='recommendations'),
+#]
+
+
 from django.urls import path
-from .views import recommendations_api
+from .views import recommend_jobs
 
 urlpatterns = [
-    path("api/recommendations/", recommendations_api, name="recommendations_api"),
+    path('recommend/<int:user_id>/', recommend_jobs, name='recommend_jobs'),
 ]

@@ -10,5 +10,7 @@ urlpatterns = [
     path("api/jobs/", include("jobs.urls")),
     path('rec/', include('popularity_recommendation.urls')),
     path('chat/', include('chat.urls')),
+    path('api/collab/', include('collab.urls')),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

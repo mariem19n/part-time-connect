@@ -26,7 +26,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = ['daphne',
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages',
     'django.contrib.staticfiles','api','rest_framework','rest_framework.authtoken','corsheaders','accounts','jobs','feedback','chat',
-    'background_task','django_extensions'
+    'django.contrib.staticfiles','api','rest_framework','rest_framework.authtoken', 'collab', 'corsheaders','accounts','jobs','feedback','background_task','django_extensions'
 ]
 
 MIDDLEWARE = [

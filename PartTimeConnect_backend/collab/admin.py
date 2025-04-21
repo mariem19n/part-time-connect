@@ -9,6 +9,6 @@ class JobAdmin(admin.ModelAdmin):
 
 @admin.register(JobInteraction)
 class JobInteractionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'job', 'rating', 'timestamp')
-    list_filter = ('rating', 'timestamp')
+    list_display = ('user', 'job', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
     search_fields = ('user__username', 'job__title')

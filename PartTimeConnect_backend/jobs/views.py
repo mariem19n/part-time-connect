@@ -9,6 +9,7 @@ from accounts.models import CompanyRegistration
 import json
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http.multipartparser import MultiPartParser, MultiPartParserError
+from django.core.paginator import Paginator
 ##########################################################################DELETE job offer created by company X >> Done
 @csrf_exempt
 @require_http_methods(["DELETE"])
@@ -126,6 +127,29 @@ def create_job_offer(request):
     except Exception as e:
         print(f"Error processing job: {str(e)}")
         return JsonResponse({'status': 'error', 'message': 'Internal server error'}, status=500)
+###########################################################################List job offer >> Done
+@require_GET
+def get_jobs(request):
+    try:
+        jobs = Job.objects.all().select_related('company')[:10]  # Limit to 10 for testing
+        jobs_list = []
+        
+        for job in jobs:
+            jobs_list.append({
+                'id': job.id,
+                'title': job.title,
+                'description': job.description,
+                'location': job.location,
+                'salary': str(job.salary) if job.salary else None,  # Convert Decimal to string
+                'working_hours': job.working_hours,
+                'contract_type': job.contract_type,
+                'duration': job.duration,
+
+            })
+            
+        return JsonResponse({'jobs': jobs_list}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 ###########################################################################List job offer posted by company X >> Done
 @require_GET
 def job_list(request):

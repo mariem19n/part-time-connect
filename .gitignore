@@ -43,3 +43,49 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Django specific
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+/staticfiles/
+/media/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+debug.log
+*.log
+logs/
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Development files
+.DS_Store
+Thumbs.db
+
+# User uploads (already in your media/ but explicit)
+/resumes/
+/photos/
+
+# Python cache
+*.py[cod]
+__pycache__/
+
+# Database
+*.sqlite3
+*.sqlite3-*

@@ -6,6 +6,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class JobService {
   static const String baseUrl = "http://10.0.2.2:8000/api/jobs";
+  Future<List<Job>> getJobs() async {
+    try {
+      final response = await http.get(Uri.parse('${baseUrl}/get_jobs/'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final jobs = data['jobs'] as List;
+        return jobs.map((job) => Job.fromJson(job)).toList();
+      } else {
+        throw Exception('Failed to load jobs: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load jobs: $e');
+    }
+  }
   static Future<bool> deleteJob(int jobId, String token) async {
     try {
       final response = await http.delete(

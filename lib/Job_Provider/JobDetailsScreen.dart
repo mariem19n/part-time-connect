@@ -16,12 +16,14 @@ class JobDetailsScreen extends StatefulWidget {
 class _JobDetailsScreenState extends State<JobDetailsScreen> {
   late Future<Job> jobDetails;
   late Future<String?> companyUsername;
+  late Future<String?> userType;
 
   @override
   void initState() {
     super.initState();
     jobDetails = JobService.fetchJobDetails(widget.jobId);
     companyUsername = getUsername();
+    userType = getUserType();
   }
 
   @override
@@ -83,25 +85,63 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.edit, color: AppColors.borderdarkColor),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PostJobScreen(existingJob: job),
-                            ),
-                          ).then((_) {
-                            // Optional: Refresh the job details after editing
-                            setState(() {
-                              jobDetails = JobService.fetchJobDetails(widget.jobId);
-                            });
-                          });
+                      FutureBuilder<String?>(
+                        future: getUserType(),
+                        builder: (context, userTypeSnapshot) {
+                          if (userTypeSnapshot.data == 'JobProvider') {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Tooltip(
+                                  message: 'Edit',
+                                  child: IconButton(
+                                    icon: Icon(Icons.edit, color: AppColors.borderdarkColor),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PostJobScreen(existingJob: job),
+                                        ),
+                                      ).then((_) {
+                                        setState(() {
+                                          jobDetails = JobService.fetchJobDetails(widget.jobId);
+                                        });
+                                      });
+                                    },
+                                  ),
+                                ),
+                                Tooltip(
+                                  message: 'Delete',
+                                  child: IconButton(
+                                    icon: Icon(Icons.delete, color: AppColors.errorBackground),
+                                    onPressed: () => _confirmDelete(context, job.id),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else if (userTypeSnapshot.data == 'JobSeeker') {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Tooltip(
+                                  message: 'Save',
+                                  child: IconButton(
+                                    icon: Icon(Icons.bookmark_border, color: AppColors.borderdarkColor),
+                                    onPressed: () => _confirmDelete(context, job.id),
+                                    ),
+                                ),
+                                Tooltip(
+                                  message: 'Apply',
+                                  child: IconButton(
+                                    icon: Icon(Icons.assignment_turned_in, color: AppColors.primary),
+                                    onPressed: () => _confirmDelete(context, job.id),
+                                ),
+                                ),
+                              ],
+                            );
+                          }
+                          return SizedBox();
                         },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: AppColors.errorBackground),
-                        onPressed: () => _confirmDelete(context, job.id),
                       ),
                     ],
                   ),

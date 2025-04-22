@@ -45,7 +45,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
 
   @override
   Widget build(BuildContext context) {
-    //bool isJobSeeker = Provider.of<UserRole>(context).userType == UserType.JobProvider;
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -85,23 +84,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                     color: AppColors.borderColor,
                   ),
                   prefixIcon: const Icon(Icons.person, color: AppColors.borderColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: AppColors.borderColor,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 style: const TextStyle(
                   color: AppColors.primary,
@@ -134,13 +116,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                     color: AppColors.borderColor,
                   ),
                   prefixIcon: const Icon(Icons.email, color: AppColors.borderColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color:AppColors.primary, width: 2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
@@ -174,13 +149,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                     color: AppColors.borderColor,
                   ),
                   prefixIcon: const Icon(Icons.business, color: AppColors.borderColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -214,13 +182,6 @@ class _RegistrationRecruiterState extends State<RegistrationRecruiter> {
                 value: _selectedJobType.isNotEmpty ? _selectedJobType : null,
                 decoration: InputDecoration(
                   hintText: 'Select job type',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color:AppColors.primary, width: 2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 items: ['Full-Time', 'Part-Time', 'Freelance', 'Internship']
                     .map((jobType) => DropdownMenuItem(

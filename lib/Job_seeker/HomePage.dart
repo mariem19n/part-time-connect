@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projects/Job_Provider/JobDetailsScreen.dart';
 import 'package:flutter_projects/Log_In/Log_In_Screen.dart';
 import 'package:flutter_projects/services/Logout_service.dart';
 import '../AppColors.dart';
 import 'package:flutter_projects/Navigation_Bottom_Bar/custom_bottom_nav_bar.dart';
 import 'package:flutter_projects/Navigation_Bottom_Bar/navigation_helper.dart';
 import 'package:provider/provider.dart';
+import '../Job_Provider/job_card.dart';
 import '../UserRole.dart';
 import 'package:flutter_projects/services/recommendation_service.dart';
-import '../recommendation_widgets.dart'; // Make sure this exists
+import '../auth_helper.dart';
+import '../chat/ChatScreen.dart';
+import '../recommendation_widgets.dart';
+import 'package:flutter_projects/Job_Provider/jobfetch_service.dart';
+import '../Job_Provider/job.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'ProfilePage.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,10 +32,23 @@ class _HomePageState extends State<HomePage> {
   late Future<Map<String, dynamic>> _recommendationsFuture;
   final TextEditingController _searchController = TextEditingController();
 
+  final JobService jobService = JobService();
+  late Future<List<Job>> _jobsFuture;
+
+  List<dynamic> _searchResults = [];
+  bool _isSearching = false;
+
   @override
   void initState() {
     super.initState();
     _loadRecommendations();
+    _loadJobs();
+  }
+
+  void _loadJobs() {
+    setState(() {
+      _jobsFuture = jobService.getJobs();
+    });
   }
 
   void _loadRecommendations() {
@@ -48,6 +72,34 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+  Future<void> _handleSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/search-users/?q=$query'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _searchResults = json.decode(response.body);
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _isSearching = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Search failed: $e')),
+      );
+    }
   }
 
   @override
@@ -75,7 +127,10 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => _loadRecommendations(),
+        onRefresh: () async {
+           _loadRecommendations();
+           _loadJobs();
+        },
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -98,15 +153,56 @@ class _HomePageState extends State<HomePage> {
                 decoration: InputDecoration(
                   hintText: 'Search...',
                   prefixIcon: Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searchResults = [];
+                      });
+                    },
+                  ),
                 ),
-                onChanged: (value) {
-                  // Add search functionality here
-                },
+                onChanged: (value) async {
+                  await _handleSearch(value);
+                  },
               ),
             ],
           ),
           ),
-              // Recommendations Section
+              // Search Results (appears only when there are results)
+              if (_isSearching)
+                Center(child: CircularProgressIndicator())
+              else if (_searchResults.isNotEmpty)
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Search Results',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    // Show only first 2 search results
+                    ..._searchResults.take(2).map((user) => _buildSearchItem(user)).toList(),
+                    if (_searchResults.length > 2)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '+ ${_searchResults.length - 2} more results',
+                          style: TextStyle(color: AppColors.borderdarkColor),
+                        ),
+                      ),
+                    Divider(height: 32),
+                  ],
+                ),
               FutureBuilder(
                 future: _recommendationsFuture,
                 builder: (context, snapshot) {
@@ -135,6 +231,60 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
+              FutureBuilder<List<Job>>(
+                future: _jobsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Error loading jobs: ${snapshot.error}'),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('No jobs available'),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: Text(
+                          'Open Positions',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+
+                      // Display your jobs list here
+                      //return ListView.builder(
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          final job = snapshot.data![index];
+                          return JobCard(
+                            job: job,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => JobDetailsScreen(jobId: job.id),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),],);
+                },
+              ),
             ],
           ),
         ),
@@ -144,6 +294,64 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
       ),
+    );
+  }
+  Widget _buildSearchItem(dynamic user) {
+    final isCandidate = user['user_type'] == 'JobSeeker';
+    final avatarColor = isCandidate ? AppColors.background : AppColors.borderColor;
+
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: avatarColor,
+        child: user['profile_picture'] == null
+            ? Text(user['username'][0].toUpperCase())
+            : null,
+        backgroundImage: user['profile_picture'] != null
+            ? NetworkImage(user['profile_picture'])
+            : null,
+      ),
+      title: Text(user['username']),
+      subtitle: Text(isCandidate ? 'Job Seeker' : 'Recruiter'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min, // Keep the row compact
+        children: [
+          // Message Icon
+          IconButton(
+            icon: Icon(Icons.message,size: 20, color: AppColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    receiverId: user['id'].toString(),
+                    receiverType: user['user_type'] == 'JobSeeker'
+                        ? 'user'
+                        : 'company',
+                    receiverName: user['username'],
+                  ),
+                ),
+              );
+            },
+          ),
+          // Profile View Icon
+          IconButton(
+            icon: Icon(Icons.person,size: 20, color: AppColors.primary),
+            onPressed: () async {
+              int? userId = await getUserId();
+              if (userId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ProfilePage(userId: userId)),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      onTap: () {
+        // Handle item tap
+      },
     );
   }
 }

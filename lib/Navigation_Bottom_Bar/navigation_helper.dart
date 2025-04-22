@@ -4,6 +4,7 @@ import '../Job_seeker/ProfilePage.dart'; // Import the ProfilePage
 import '../Job_seeker/HomePage.dart';
 import '../Job_Provider/PostJobScreen.dart';
 import '../Job_Provider/JobOffersScreen.dart';
+import 'package:flutter_projects/chat/MessagerieScreen.dart';
 
 class NavigationHelper {
   // Navigate based on the index and user role
@@ -38,7 +39,10 @@ class NavigationHelper {
             break;
           case 3: // Messagerie
             print('  → Navigating to Messagerie');
-            Navigator.pushNamed(context, '/messagerie');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MessagerieScreen()),
+            );
             print('  ✅ Successfully navigated to Messagerie');
             break;
           case 4: // Profile
@@ -70,7 +74,10 @@ class NavigationHelper {
             break;
           case 2: // Messagerie
             print('  → Navigating to Messagerie');
-            Navigator.pushNamed(context, '/messagerie');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MessagerieScreen()),
+            );
             print('  ✅ Successfully navigated to Messagerie');
             break;
           case 3: // Profile

@@ -44,6 +44,9 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 302) {
         // Clear the user ID from local storage
         await clearUserId();
+        await clearUsername();
+        await clearUserType();
+        await clearToken();
         // Clear stored cookies (CSRF token and session)
         await cookieJar.deleteAll();
         // Reset the provider state

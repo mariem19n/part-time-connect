@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projects/Job_seeker/WorkLocationPage.dart';
 import '../commun/password_field.dart';
 import '../commun/Pdf_Upload.dart';
 import 'package:flutter_projects/services/RegistrationUser_service.dart';
@@ -11,9 +12,9 @@ import 'package:flutter/gestures.dart';
 import '../AppColors.dart';
 import 'package:provider/provider.dart';
 import '../UserRole.dart';
+
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
-
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -100,23 +101,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     color: AppColors.borderColor,
                   ),
                   prefixIcon: const Icon(Icons.person, color: AppColors.borderColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: AppColors.borderColor,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 style: const TextStyle(
                   color: AppColors.primary,
@@ -149,13 +133,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     color: AppColors.borderColor,
                   ),
                   prefixIcon: const Icon(Icons.email, color:AppColors.borderColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
@@ -235,14 +212,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'Enter a skill',
                                   labelStyle: TextStyle(color: AppColors.primary),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.primary, width: 2),
-                                  ),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: AppColors.primary, width: 1),
-                                  ),
                                 ),
-                                cursorColor: AppColors.primary,
                               ),
                               SizedBox(height: 20),
                             ],
@@ -361,7 +331,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration successful!')));
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => HomePage()),
+                          //MaterialPageRoute(builder: (context) => HomePage()),
+                          MaterialPageRoute(builder: (context) => Worklocationpage()),
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration failed!')));

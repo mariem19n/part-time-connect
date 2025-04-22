@@ -1,3 +1,4 @@
+////file : auth_helper.dart
 import 'package:shared_preferences/shared_preferences.dart';
 ////////////////////////////////////////////////////////////////////////////
 /// Save the username to local storage
@@ -42,6 +43,10 @@ Future<void> saveUserType(String userType) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('userType', userType);
   print('Saved user type: $userType');
+}
+Future<String?> getUserType() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('userType');
 }
 /// Clear the user type from local storage
 Future<void> clearUserType() async {

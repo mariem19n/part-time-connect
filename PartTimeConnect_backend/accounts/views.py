@@ -18,40 +18,31 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage,FileSystemStorage
 import traceback
-
-
-# views.py
-@api_view(['POST'])
-def generate_token(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    try:
-        user = UserRegistration.objects.get(username=username)
-        if check_password(password, user.password):  # Verify hashed password
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
-    except UserRegistration.DoesNotExist:
-        pass
-    
-    return Response({'error': 'Invalid credentials'}, status=400)
-########################################################################################################### Update Location
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from django.views.decorators.csrf import csrf_exempt
-import json
-from .models import UserProfile
+from django.db.models import Q
 
+########################################################################################################### Update Location
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def update_user_location(request):
     try:
+        # Get the token user
+        token_user = request.user
+        
+        # Find the corresponding UserRegistration
+        try:
+            user_registration = UserRegistration.objects.get(username=token_user.username)
+        except UserRegistration.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'User registration not found'
+            }, status=404)
+        
         # Get or create user profile
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile, created = UserProfile.objects.get_or_create(user=user_registration)
         
         # Parse JSON data from request body
         data = json.loads(request.body)
@@ -88,6 +79,7 @@ def update_user_location(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
 ########################################################################################################### Profile Page
 @csrf_exempt
 @api_view(['GET'])
@@ -108,9 +100,6 @@ def get_profile(request, user_id):
         return JsonResponse({"error": "User not found"}, status=404)
 
 #############################################################################Messagerie search box >>>Done
-from django.http import JsonResponse
-from django.db.models import Q
-
 def search_users(request):
     query = request.GET.get('q', '')
     
@@ -127,7 +116,7 @@ def search_users(request):
     
     results = list(users) + list(companies)
     return JsonResponse(results, safe=False)
-########################################################################################################### Registration_Company Backend >>> Done
+########################################################################################################### Registration_Company Backend + Token >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
 def companyRegistration(request):
@@ -143,8 +132,19 @@ def companyRegistration(request):
             user_type = request.POST.get('user_type')
 
             # Validate required fields
-            if not username or not email or not password or not jobtype or not photos or not company_description:
-                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+            required_fields = ['username', 'email', 'password', 'jobtype', 'company_description']
+            missing_fields = [field for field in required_fields if not request.POST.get(field)]
+            if missing_fields or not photos:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Missing required fields: {", ".join(missing_fields)}'
+                }, status=400)
+            # Check for existing company
+            if CompanyRegistration.objects.filter(username=username).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Company with this username already exists'
+                }, status=400)
 
             # Hash the password
             hashed_password = make_password(password)
@@ -166,17 +166,42 @@ def companyRegistration(request):
             company_registration.set_photos(saved_files)  # Store photo paths as a JSON string
             company_registration.save()
 
+            # Store photo paths
+            if hasattr(company_registration, 'set_photos'):
+                company_registration.set_photos(saved_files)
+            else:
+                company_registration.photos = json.dumps(saved_files)
+
+            company_registration.save()
+
+
+            # Create corresponding Django User and token (same as login approach)
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            token, created = Token.objects.get_or_create(user=user)
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Company registered successfully!',
-                'files': saved_files
+                'id': company_registration.id,
+                #'files': saved_files,
+                'user_type': user_type,
+                'username': username,
+                'email': email,
+                'jobtype': jobtype,
+                'company_description': company_description,
+                'photos': saved_files,
+                'token': token.key
             }, status=201)
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-########################################################################################################### Registration_User Backend >>> Done
+########################################################################################################### Registration_User Backend + Token >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
 def registerPage(request):
@@ -210,7 +235,6 @@ def registerPage(request):
                     'status': 'error',
                     'message': f'Missing required fields: {", ".join(missing_fields)}'
                 }, status=400)
-
             # Hash the password
             hashed_password = make_password(password)
             print("Password hashed successfully.")
@@ -241,13 +265,24 @@ def registerPage(request):
             print("Resume paths stored in UserRegistration object.")
             user_registration.save()
             print("UserRegistration object saved to the database.")
-
+            # Create corresponding Django User and token (same as login approach)
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            token, created = Token.objects.get_or_create(user=user)
             return JsonResponse({
                 'status': 'success',
                 'message': 'User registered successfully!',
                 'id': user_registration.id,
                 'files': saved_files,
-                # 'profile_created': created
+                'user_type': user_type,
+                'username': username,
+                'email': email,
+                'skills': skills,
+                'resumes': saved_files,
+                'token': token.key
             }, status=201)
 
 
@@ -257,7 +292,7 @@ def registerPage(request):
             traceback.print_exc()  # This will print the full traceback
             return JsonResponse({
                 'status': 'error',
-                'message': 'An error occurred during registration'
+                'message': str(e)
             }, status=500)
     
     return JsonResponse({

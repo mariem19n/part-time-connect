@@ -15,8 +15,7 @@ urlpatterns = [
     path('register/', views.registerPage, name='register'),
     path('register_company/' ,views.companyRegistration , name="companyRegistration"),
     path('profile/<int:user_id>/', views.get_profile, name='profile'),
-    path('get-token/', views.generate_token),
-    path('update_user_location/', update_user_location, name='update_user_location'),
+    path('update-location/', update_user_location, name='update-location'),
     path('search-users/', views.search_users, name='search_users'),
 ]
 

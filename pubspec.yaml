@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.2.2
   web_socket_channel: ^2.4.0
   onesignal_flutter: ^5.1.0
+  webview_flutter: ^4.0.7
 
 dev_dependencies:
   flutter_test:

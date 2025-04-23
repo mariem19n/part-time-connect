@@ -16,7 +16,7 @@ import 'package:flutter_projects/Job_Provider/jobfetch_service.dart';
 import '../Job_Provider/job.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import '../commun/ChatbotScreen.dart';
 import 'ProfilePage.dart';
 
 
@@ -288,6 +288,17 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatbotScreen()),
+          );
+        },
+        backgroundColor: Colors.green,
+        child: Icon(Icons.chat_bubble_outline),
+        tooltip: 'Chat with us',
       ),
       bottomNavigationBar: CustomBottomNavBar(
         isJobSeeker: isJobSeeker,

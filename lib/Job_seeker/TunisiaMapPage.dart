@@ -66,20 +66,6 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
           ),
           actions: [
             TextButton(
-              /*onPressed: () async {
-                // Navigate back to the map to add new locations
-                Navigator.pop(context); // Close the dialog
-                final LatLng? newLocation = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MapSelectionPage()),
-                );
-                if (newLocation != null) {
-                  setState(() {
-                    preferredLocations.add(newLocation);
-                  });
-                  showConfirmationDialog(); // Reopen the dialog after adding
-                }
-              },*/
               onPressed: () async {
                 Navigator.pop(context);
                 final LatLng? newLocation = await Navigator.push(
@@ -99,13 +85,6 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
               ),
             ),
             TextButton(
-              /*onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => HomePage()),
-                );
-              },*/
               onPressed: () async {
                 // Save locations when confirmed
                 final success = await LocationService.updateMapLocations(preferredLocations);

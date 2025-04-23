@@ -30,61 +30,24 @@ class RegistrationUserService {
       var response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final data = json.decode(responseBody);
+
       if (response.statusCode == 201) {
         print("Registration successful!");
-        final userId = data['id'];
-        if (data['id'] != null) {
-          await saveUserId(userId);
-          print("User ID saved successfully.");
-          //return true;
-          // Now fetch token after successful registration
-          final token = await _fetchToken(username, password);
-          if (token != null) {
-            await storeToken(token);  // Save token securely
-            print("Token saved successfully.");
-            return true;
-          } else {
-            print("Error: Failed to get token");
-            return false;}
-        } else {
-          print("Error: No user ID in response");
-          return false;
-        }
 
+        // Save all user data from response
+        await saveUserId(data['id']);
+        await storeToken(data['token']);
+        await saveUserType(data['user_type']);
+        await saveUsername(data['username']);
+
+        return true;
       } else {
-        print("Error: ${response.statusCode}");
-        print("Server error: $data");
-        // You might want to show the actual error message to the user
-        throw Exception(data['message'] ?? 'Registration failed');
+        print("Registration failed: ${data['message']}");
+        return false;
       }
     } catch (e) {
-      print("Exception: $e");
+      print("Registration error: $e");
       return false;
-    }
-  }
-  static Future<String?> _fetchToken(String username, String password) async {
-    final uri = Uri.parse("http://10.0.2.2:8000/api/get-token/");
-    try {
-      final response = await http.post(
-        uri,
-        body: json.encode({
-          'username': username,
-          'password': password  // Same password used in registration
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      print("Token response: ${response.statusCode} - ${response.body}");
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body)['token'];
-      } else {
-        print("Token error: ${response.body}");
-        return null;
-      }
-    } catch (e) {
-      print("Token exception: $e");
-      return null;
     }
   }
 }

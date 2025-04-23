@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import 'HomePage.dart';
 import '../AppColors.dart';
+import 'LocationService.dart';
 class TunisiaMapPage extends StatefulWidget {
   @override
   _TunisiaMapPageState createState() => _TunisiaMapPageState();
@@ -65,7 +66,7 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () async {
+              /*onPressed: () async {
                 // Navigate back to the map to add new locations
                 Navigator.pop(context); // Close the dialog
                 final LatLng? newLocation = await Navigator.push(
@@ -78,6 +79,19 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
                   });
                   showConfirmationDialog(); // Reopen the dialog after adding
                 }
+              },*/
+              onPressed: () async {
+                Navigator.pop(context);
+                final LatLng? newLocation = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MapSelectionPage()),
+                );
+                if (newLocation != null) {
+                  setState(() {
+                    preferredLocations.add(newLocation);
+                  });
+                  showConfirmationDialog();
+                }
               },
               child: Text(
                 "Add Location",
@@ -85,12 +99,26 @@ class _TunisiaMapPageState extends State<TunisiaMapPage> {
               ),
             ),
             TextButton(
-              onPressed: () {
+              /*onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => HomePage()),
                 );
+              },*/
+              onPressed: () async {
+                // Save locations when confirmed
+                final success = await LocationService.updateMapLocations(preferredLocations);
+                if (success) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to save locations'))
+                  );
+                }
               },
               child: Text(
                 "Confirm",

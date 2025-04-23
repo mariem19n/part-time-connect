@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projects/Job_Provider/Registration_Recruiter.dart';
 import 'package:flutter_projects/Job_seeker/RegistrationScreen.dart';
-import 'package:flutter_projects/Job_seeker/WorkLocationPage.dart';
 import 'package:flutter_projects/AppColors.dart';
 import 'package:flutter_projects/custom_clippers.dart';
 import 'package:flutter_projects/UserRole.dart';
@@ -71,7 +70,6 @@ class JobCategoryPage extends StatelessWidget {
                               Provider.of<UserRole>(context, listen: false).setRole(UserType.JobSeeker);
                               Navigator.push(
                                 context,
-                                //MaterialPageRoute(builder: (context) => Worklocationpage()),
                                 MaterialPageRoute(
                                     builder: (context) => RegistrationScreen()),
                               );
@@ -100,7 +98,7 @@ class JobCategoryPage extends StatelessWidget {
                                    builder: (context) => RegistrationRecruiter()),
                               );
                             },
-                            child: Text('Recruiter'),
+                            child: Text('Job Provider'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor:AppColors.secondary,
                               foregroundColor: AppColors.primary,

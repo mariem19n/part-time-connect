@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../auth_helper.dart'; // Import the auth_helper file
+import '../auth_helper.dart';
 
 class RegistrationCompanyService {
   static Future<void> registerCompany({
@@ -23,7 +23,6 @@ class RegistrationCompanyService {
       request.fields['jobtype'] = jobtype;
       request.fields['company_description'] = companyDescription;
       request.fields['user_type'] = 'JobProvider'; // Explicit user type
-      print("user_type: JobProvider");
 
       // Add photos to the request
       for (var file in photos) {
@@ -33,32 +32,25 @@ class RegistrationCompanyService {
 
       // Send the request to the server
       var response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final data = json.decode(responseBody);
 
-      // Process the server response
       if (response.statusCode == 201) {
-        print("Registration successful! Response: ${await response.stream.bytesToString()}");
+        print("Registration successful!");
 
-        // Parse the response body to get the user ID (assuming the backend returns the user ID as 'id')
-        final responseBody = await response.stream.bytesToString();
-        final data = json.decode(responseBody);
-
-        if (data['status'] == 'success') {
-          final userId = data['id']; // Adjust based on the actual response
-
-          // Save the user ID to local storage
-          await saveUserId(userId);
-        } else {
-          print("Error: ${data['message']}");
-        }
+        // Save all user data from response
+        await saveUserId(data['id']);
+        await storeToken(data['token']);
+        await saveUserType(data['user_type']);
+        await saveUsername(data['username']);
 
       } else {
-        print("Error: ${response.statusCode}. Response: ${await response.stream.bytesToString()}");
+        print("Registration failed: ${data['message']}");
       }
     } catch (e) {
-      print("Exception occurred: $e");
+      print("Registration error: $e");
     }
   }
 }
-
 
 

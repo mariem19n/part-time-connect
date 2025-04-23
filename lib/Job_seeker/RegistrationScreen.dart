@@ -5,7 +5,6 @@ import '../commun/Pdf_Upload.dart';
 import 'package:flutter_projects/services/RegistrationUser_service.dart';
 import 'package:flutter_projects/commun/Privacy Policy.dart';
 import 'package:flutter_projects/commun/Terms and Conditions.dart';
-import 'HomePage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:flutter/gestures.dart';
@@ -331,7 +330,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration successful!')));
                         Navigator.pushReplacement(
                           context,
-                          //MaterialPageRoute(builder: (context) => HomePage()),
                           MaterialPageRoute(builder: (context) => Worklocationpage()),
                         );
                       } else {

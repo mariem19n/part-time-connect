@@ -6,6 +6,9 @@ import '../AppColors.dart';
 import 'package:flutter_projects/Navigation_Bottom_Bar/custom_bottom_nav_bar.dart';
 import 'package:flutter_projects/Navigation_Bottom_Bar/navigation_helper.dart';
 import 'package:provider/provider.dart';
+import '../Job_Provider/candidate_card.dart';
+import '../Job_Provider/candidate_service.dart';
+import '../Job_Provider/interaction_service.dart';
 import '../Job_Provider/job_card.dart';
 import '../UserRole.dart';
 import 'package:flutter_projects/services/recommendation_service.dart';
@@ -34,6 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   final JobService jobService = JobService();
   late Future<List<Job>> _jobsFuture;
+  late Future<List<dynamic>> _candidatesFuture;
 
   List<dynamic> _searchResults = [];
   bool _isSearching = false;
@@ -43,11 +47,17 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadRecommendations();
     _loadJobs();
+    _loadCandidates();
   }
 
   void _loadJobs() {
     setState(() {
       _jobsFuture = jobService.getJobs();
+    });
+  }
+  void _loadCandidates() {
+    setState(() {
+      _candidatesFuture = fetchCandidates();
     });
   }
 
@@ -231,58 +241,88 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
-              FutureBuilder<List<Job>>(
-                future: _jobsFuture,
+              FutureBuilder(
+                future: isJobSeeker ? _jobsFuture : _candidatesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text('Error loading jobs: ${snapshot.error}'),
+                      child: Text('Error loading data: ${snapshot.error}'),
                     );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text('No jobs available'),
+                      child: Text(isJobSeeker ? 'No jobs available' : 'No candidates available'),
                     );
                   }
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Section Header
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                        child: Text(
-                          'Open Positions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                isJobSeeker ? 'Open Positions' : 'Available Candidates',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.refresh, size: 20),
+                              onPressed: () {
+                                if (isJobSeeker) {
+                                  _loadJobs();
+                                } else {
+                                  _loadCandidates();
+                                }
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: BoxConstraints(),
+                            ),
+                          ],
                         ),
                       ),
 
-                      // Display your jobs list here
-                      //return ListView.builder(
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
-                          final job = snapshot.data![index];
-                          return JobCard(
-                            job: job,
+                          final item = snapshot.data![index];
+                          return isJobSeeker
+                              ? JobCard(
+                            job: item as Job,
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => JobDetailsScreen(jobId: job.id),
+                                  builder: (context) => JobDetailsScreen(jobId: item.id),
+                                ),
+                              );
+                            },
+                          )
+                              : CandidateCard(
+                            candidate: item,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(userId: item['id']),
                                 ),
                               );
                             },
                           );
                         },
-                      ),],);
+                      ),
+                    ],
+                  );
                 },
               ),
             ],
@@ -325,7 +365,7 @@ class _HomePageState extends State<HomePage> {
       subtitle: Text(isCandidate ? 'Job Seeker' : 'Recruiter'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min, // Keep the row compact
-        children: [
+        /*children: [
           // Message Icon
           IconButton(
             icon: Icon(Icons.message,size: 20, color: AppColors.primary),
@@ -354,6 +394,75 @@ class _HomePageState extends State<HomePage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => ProfilePage(userId: userId)),
+                );
+              }
+            },
+          ),
+        ],*/
+        children: [
+          // Message Icon
+          IconButton(
+            icon: Icon(Icons.message, size: 20, color: AppColors.primary),
+            onPressed: () async {
+              try {
+                // Record contact interaction first
+                final success = await InteractionService.recordContact(
+                  int.parse(user['id']),
+                  message: 'Initiated chat',
+                );
+
+                if (success) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        receiverId: user['id'].toString(),
+                        receiverType: user['user_type'] == 'JobSeeker'
+                            ? 'user'
+                            : 'company',
+                        receiverName: user['username'],
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to initiate chat')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: ${e.toString()}')),
+                );
+              }
+            },
+          ),
+
+          // Profile View Icon
+          IconButton(
+            icon: Icon(Icons.person, size: 20, color: AppColors.primary),
+            onPressed: () async {
+              try {
+                // Record view interaction first
+                final success = await InteractionService.recordView(int.parse(user['id']));
+
+                if (success) {
+                  int? userId = await getUserId();
+                  if (userId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage(userId: userId),
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to record view')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: ${e.toString()}')),
                 );
               }
             },

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projects/AppColors.dart';
+
+import 'Job_Provider/JobDetailsScreen.dart';
+import 'Job_Provider/interaction_service.dart';
+import 'Job_seeker/ProfilePage.dart';
 
 class RecommendationPreview extends StatelessWidget {
   final List<dynamic> items;
@@ -53,26 +58,6 @@ class RecommendationPreview extends StatelessWidget {
           ),
         ),
 
-        // View All button
-        Padding(
-          padding: EdgeInsets.only(right: 16, top: 4),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-              ),
-              onPressed: () => _navigateToFullList(context),
-              child: Text(
-                'View All →',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -88,7 +73,7 @@ class RecommendationPreview extends StatelessWidget {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _showItemDetails(context, item),
+          onTap: () => _navigateToDetails(context, item),
           child: Padding(
             padding: EdgeInsets.all(12),
             child: Column(
@@ -113,23 +98,24 @@ class RecommendationPreview extends StatelessWidget {
                       : (item['skills'] as List<dynamic>).join(', '),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppColors.borderdarkColor,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Spacer(),
-
-                // Score chip
+                Spacer(), // This pushes the button to the bottom
+                // Save button
                 Align(
                   alignment: Alignment.bottomRight,
-                  child: Chip(
-                    label: Text(
-                      item['score']?.toStringAsFixed(1) ?? '0.0',
-                      style: TextStyle(fontSize: 12),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.bookmark_border,
+                      size: 20,
+                      color: AppColors.borderdarkColor,
                     ),
+                    onPressed: () => _handleSaveItem(context, item),
                     padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                    constraints: BoxConstraints(),
                   ),
                 ),
               ],
@@ -139,112 +125,67 @@ class RecommendationPreview extends StatelessWidget {
       ),
     );
   }
-
-  void _navigateToFullList(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FullRecommendationsPage(
-          items: items,
-          type: type,
+  void _navigateToDetails(BuildContext context, dynamic item) {
+    if (type == 'jobs') {
+      // Navigate to job details page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => JobDetailsScreen(jobId: item['id']),
         ),
-      ),
-    );
-  }
-
-  void _showItemDetails(BuildContext context, dynamic item) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              item['title'] ?? item['name'],
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              type == 'jobs'
-                  ? 'Company: ${item['company']}'
-                  : 'Skills: ${item['skills'].join(', ')}',
-            ),
-            SizedBox(height: 8),
-            Text('Score: ${item['score']?.toStringAsFixed(1) ?? 'N/A'}'),
-          ],
+      );
+    } else {
+      // Navigate to candidate profile page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfilePage(userId: item['id']),
         ),
-      ),
-    );
+      );
+    }
   }
-}
+  Future<void> _handleSaveItem(BuildContext context, dynamic item) async {
+    try {
+      bool success;
 
-class FullRecommendationsPage extends StatelessWidget {
-  final List<dynamic> items;
-  final String type;
+      if (type == 'jobs') {
+        // Call job save service (you'll need to implement this)
+        print('Saving job: ${item['title']}');
+        // Example: success = await JobService.saveJob(item['id']);
+        // For now we'll use a placeholder:
+        success = true;
+      } else {
+        // Call candidate shortlist service
+        success = await InteractionService.recordShortlist(item['id']);
 
-  const FullRecommendationsPage({
-    required this.items,
-    required this.type,
-  });
+        if (success) {
+          print('Successfully shortlisted candidate: ${item['name']}');
+        } else {
+          print('Failed to shortlist candidate');
+        }
+      }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(type == 'jobs' ? 'All Job Listings' : 'All Candidates'),
-      ),
-      body: ListView.separated(
-        padding: EdgeInsets.all(12),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Card(
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ListTile(
-              contentPadding: EdgeInsets.all(16),
-              title: Text(
-                item['title'] ?? item['name'],
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 4),
-                  Text(
-                    type == 'jobs'
-                        ? 'Company: ${item['company']}'
-                        : 'Skills: ${item['skills'].join(', ')}',
-                  ),
-                  SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text('Score: '),
-                      Chip(
-                        label: Text(
-                          item['score']?.toStringAsFixed(1) ?? '0.0',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              onTap: () {}, // Add detailed view if needed
-            ),
-          );
-        },
-      ),
-    );
+      // Show feedback to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            type == 'jobs'
+                ? 'Job saved successfully'
+                : 'Candidate added to shortlist',
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+    } catch (e) {
+      print('Error saving item: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save: ${e.toString()}'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
+
 }

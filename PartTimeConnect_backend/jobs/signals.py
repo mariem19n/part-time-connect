@@ -70,7 +70,7 @@ def update_profile_match_score_on_job_change(sender, instance, **kwargs):
         user_profile.profile_match_score(instance)
         user_profile.calculate_recommendation_score(instance)
 
-
+####################################################
 @receiver(post_save, sender=RecruiterView)
 def update_profile_views(sender, instance, **kwargs):
     """
@@ -111,7 +111,7 @@ def update_contacts(sender, instance, **kwargs):
     # Optional: Recalculate the recommendation_score for all jobs
     for job in Job.objects.all():
         instance.candidate.calculate_recommendation_score(job)
-
+####################################################
 @receiver(post_save, sender=Feedback)
 def update_feedback_score_on_save(sender, instance, **kwargs):
     """

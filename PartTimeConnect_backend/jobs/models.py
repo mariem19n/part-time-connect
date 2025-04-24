@@ -71,7 +71,7 @@ class Job(models.Model):
 
         fake_reports = sum(fb.is_fake for fb in feedbacks)
         return (total_weighted_rating - (fake_reports * 2)) / max(total_weight + len(feedbacks), 1)
-    
+    ######################################################################
     def update_counts(self):
         """
         Update counts based on JobInteraction records.
@@ -80,7 +80,9 @@ class Job(models.Model):
         self.views_count = self.interactions.filter(interaction_type='VIEW').count()
         self.saves_count = self.interactions.filter(interaction_type='SAVE').count()
         self.save(update_fields=['applications_count', 'views_count', 'saves_count'])
+    #######################################################################
 
+##############################>>>Represents a user's application to a job.
 class JobApplication(models.Model):
     APPLICATION_STATUS = [
         ('Saved', 'Saved'),  # Job offer saved by the user
@@ -101,7 +103,7 @@ class JobApplication(models.Model):
 
     def __str__(self):
         return f"{self.user.full_name} - {self.job.title} ({self.status})"
-
+###############################>>>Tracks when a recruiter views a candidate profile.
 class RecruiterView(models.Model):
     recruiter = models.ForeignKey(CompanyRegistration, on_delete=models.CASCADE, related_name="views")
     candidate = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="recruiter_views")
@@ -109,7 +111,7 @@ class RecruiterView(models.Model):
 
     def __str__(self):
         return f"{self.recruiter.username} viewed {self.candidate.user.username} at {self.viewed_at}"
-
+###############################>>>Tracks when a recruiter save a candidate profile.
 class Shortlist(models.Model):
     recruiter = models.ForeignKey(CompanyRegistration, on_delete=models.CASCADE, related_name="shortlists")
     candidate = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="recruiter_shortlists")
@@ -117,7 +119,7 @@ class Shortlist(models.Model):
 
     def __str__(self):
         return f"{self.recruiter.username} shortlisted {self.candidate.user.username} at {self.shortlisted_at}"
-
+###############################>>>Tracks when a recruiter contacts a candidate profile.
 class RecruiterContact(models.Model):
     recruiter = models.ForeignKey(CompanyRegistration, on_delete=models.CASCADE, related_name="contacts")
     candidate = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="recruiter_contacts")
@@ -126,7 +128,7 @@ class RecruiterContact(models.Model):
 
     def __str__(self):
         return f"{self.recruiter.username} contacted {self.candidate.user.username} at {self.contacted_at}"
-
+###############################>>>Logs and tracks user interactions with job posts for analytics and engagement metrics.
 class JobInteraction(models.Model):
     INTERACTION_TYPES = [
         ('IMPRESSION', 'Impression'),# Job was shown to the user

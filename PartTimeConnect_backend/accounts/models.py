@@ -64,6 +64,7 @@ class UserProfile(models.Model):  # Stores additional user details
         if location in self.preferred_locations:
             self.preferred_locations.remove(location)
             self.save()
+            
     about_me = models.TextField(null=True, blank=True)
     skills = models.JSONField(default=list)
     education_certifications = models.JSONField(default=list)

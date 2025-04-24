@@ -21,8 +21,180 @@ import traceback
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage
 
-########################################################################################################### Update Location
+
+# accounts/views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
+from jobs.models import RecruiterView, Shortlist, RecruiterContact  # Add this import
+
+# accounts/views.py
+@csrf_exempt
+@require_POST
+def record_recruiter_view(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+            
+        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+        
+        # Get or create the candidate profile
+        candidate_profile, created = UserProfile.objects.get_or_create(
+            user=candidate_user,
+            defaults={
+                'full_name': candidate_user.username,
+                'skills': []
+            }
+        )
+        
+        # Create the view record
+        RecruiterView.objects.create(
+            recruiter=recruiter,
+            candidate=candidate_profile
+        )
+        
+        # Update candidate's profile views count
+        candidate_profile.profile_views += 1
+        candidate_profile.save()
+        
+        return JsonResponse({'status': 'success'})
+    except CompanyRegistration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+    except UserRegistration.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@csrf_exempt
+@require_POST
+def record_shortlist(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')  # This should be UserRegistration ID
+        
+        from accounts.models import CompanyRegistration, UserProfile, UserRegistration
+        from jobs.models import Shortlist
+        
+        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+        candidate_profile = candidate_user.profile
+        
+        Shortlist.objects.create(
+            recruiter=recruiter,
+            candidate=candidate_profile
+        )
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@csrf_exempt
+@require_POST
+def record_recruiter_contact(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')  # This should be UserRegistration ID
+        message = data.get('message', '')
+        
+        from accounts.models import CompanyRegistration, UserProfile, UserRegistration
+        from jobs.models import RecruiterContact
+        
+        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+        candidate_profile = candidate_user.profile
+        
+        RecruiterContact.objects.create(
+            recruiter=recruiter,
+            candidate=candidate_profile,
+            message=message
+        )
+        
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+######################################################################################################## Profile Page
+@csrf_exempt
+@api_view(['GET'])
+def get_profile(request, user_id):
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        user = UserRegistration.objects.get(id=user_id)
+        return JsonResponse({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            #"location": user.location,
+            "key_skills": user.skills.split(",") if user.skills else []
+        }, status=200)
+    except UserRegistration.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+########################################################################################################## Get candidat Home Page Job Provider >>>Done
+@api_view(['GET'])
+def get_candidates(request):
+    search_query = request.GET.get('search', '')
+    skills_filter = request.GET.get('skills', '').split(',') if request.GET.get('skills') else []
+    
+    # Get candidates with profiles only
+    candidates = UserRegistration.objects.filter(
+        user_type='JobSeeker',
+        profile__isnull=False  # Only include users with profiles
+    ).select_related('profile')
+    
+    # Apply search filter if provided
+    if search_query:
+        candidates = candidates.filter(
+            Q(username__icontains=search_query) |
+            Q(profile__full_name__icontains=search_query)
+        )
+    
+    # Apply skills filter if provided
+    if skills_filter:
+        candidates = candidates.filter(profile__skills__overlap=skills_filter)
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(candidates, 10)
+    
+    try:
+        candidates_page = paginator.page(page)
+    except EmptyPage:
+        return JsonResponse({"error": "Page not found"}, status=404)
+    
+    candidate_list = []
+    for candidate in candidates_page:
+        try:
+            profile = candidate.profile
+            candidate_list.append({
+                "id": candidate.id,
+                "username": candidate.username,
+                "full_name": profile.full_name if profile.full_name else candidate.username,
+                "about_me": profile.about_me if profile.about_me else "No description available",
+                "skills": profile.skills if hasattr(profile, 'skills') else [],
+                "profile_picture": None,  # Add if you have profile pictures
+            })
+        except UserProfile.DoesNotExist:
+            # Skip candidates without profiles
+            continue
+    
+    return JsonResponse({
+        "count": paginator.count,
+        "results": candidate_list,
+    }, safe=False)
+########################################################################################################## Update Location >>>Done
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
@@ -79,26 +251,6 @@ def update_user_location(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
-
-########################################################################################################### Profile Page
-@csrf_exempt
-@api_view(['GET'])
-def get_profile(request, user_id):
-    if request.method != "GET":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
-
-    try:
-        user = UserRegistration.objects.get(id=user_id)
-        return JsonResponse({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            #"location": user.location,
-            "key_skills": user.skills.split(",") if user.skills else []
-        }, status=200)
-    except UserRegistration.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
-
 #############################################################################Messagerie search box >>>Done
 def search_users(request):
     query = request.GET.get('q', '')

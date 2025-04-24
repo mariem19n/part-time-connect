@@ -30,7 +30,7 @@ def job_seeker_recommendations(request):
         'popularity_score': job.popularity_score
     } for job in recommendations]
     
-    return Response({'preview_items': data[:3], 'all_items': data})
+    return Response({'preview_items': data[:10], 'all_items': data})
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
@@ -53,4 +53,4 @@ def recruiter_recommendations(request, job_id=None):
         'score': profile.recommendation_score
     } for profile in candidates[:10]]
     
-    return Response({'preview_items': data[:3], 'all_items': data})
+    return Response({'preview_items': data[:10], 'all_items': data})

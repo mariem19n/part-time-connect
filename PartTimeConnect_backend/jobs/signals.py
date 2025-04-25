@@ -28,17 +28,6 @@ def update_job_popularity_on_feedback_delete(sender, instance, **kwargs):
     job = instance.job
     job.update_popularity_score()
 ##################################################################################################### Recruiter-Focused Candidate Ranking Model
-@receiver(post_save, sender=JobApplication)
-def update_engagement_score(sender, instance, **kwargs):
-    """
-    Update the user's engagement score whenever a job application is saved.
-    """
-    if kwargs.get('created', False) or instance.tracker.has_changed('job'):
-        user_profile = instance.user
-        recruiter_job = instance.job
-        user_profile.calculate_engagement_score(recruiter_job)
-        user_profile.calculate_recommendation_score(recruiter_job)  # Update recommendation score
-
 @receiver(post_save, sender=Job)
 def update_profile_match_score_on_job_change(sender, instance, **kwargs):
     """
@@ -275,6 +264,23 @@ def update_job_interactions(sender, instance, created, **kwargs):
         
     except Exception as e:
         print(f"Error updating job interactions: {str(e)}")
+##############################################################################################################################
+@receiver(post_save, sender=JobApplication)
+def update_engagement_score(sender, instance, **kwargs):
+    """
+    Update the user's engagement score whenever a job application is saved.
+    """
+    user_profile = instance.user
+    recruiter_job = instance.job
+    
+    # Always update when created
+    if kwargs.get('created', False):
+        user_profile.calculate_engagement_score(recruiter_job)
+        user_profile.calculate_recommendation_score(recruiter_job)
+    # For updates, just update regardless of what changed
+    else:
+        user_profile.calculate_engagement_score(recruiter_job)
+        user_profile.calculate_recommendation_score(recruiter_job)
 
 
 

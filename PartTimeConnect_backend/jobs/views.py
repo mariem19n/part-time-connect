@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Job, JobInteraction
+from .models import Job, JobInteraction, JobApplication
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +10,36 @@ import json
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http.multipartparser import MultiPartParser, MultiPartParserError
 from django.core.paginator import Paginator
+########################################################################## update job applications status of an job offer X >> Done
+@csrf_exempt
+@require_http_methods(["PUT"])
+def update_application_status(request, job_id, user_id):
+    try:
+        application = JobApplication.objects.get(job_id=job_id, user_id=user_id)
+        data = json.loads(request.body)
+        application.status = data.get('status', application.status)
+        application.save()
+        return JsonResponse({'status': 'success'})
+    except JobApplication.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Application not found'}, status=404)
+########################################################################## Get job applications Number of an job offer X >> Done
+@require_GET
+def job_applications_count(request, job_id):
+    count = JobApplication.objects.filter(job_id=job_id).count()
+    return JsonResponse({'count': count})
+########################################################################## Get job applications of an job offer X >> Done
+@require_GET
+def job_applications(request, job_id):
+    applications = JobApplication.objects.filter(job_id=job_id).select_related('user')
+    
+    data = [{
+        'user_id': app.user.id,
+        'user_name': app.user.full_name,
+        'status': app.status,
+        'application_date': app.application_date.strftime('%Y-%m-%d'),
+    } for app in applications]
+    
+    return JsonResponse(data, safe=False)
 ##########################################################################DELETE job offer created by company X >> Done
 @csrf_exempt
 @require_http_methods(["DELETE"])

@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from jobs.models import Job , JobApplication , RecruiterView, Shortlist, RecruiterContact, JobInteraction
 from feedback.models import Feedback
 from accounts.models import UserProfile
+from django.db.models import F
 
 @receiver(post_save, sender=Job)
 def update_job_popularity_on_job_update(sender, instance, **kwargs):
@@ -10,55 +11,6 @@ def update_job_popularity_on_job_update(sender, instance, **kwargs):
     Update the popularity score of a job whenever the job is updated.
     """
     instance.update_popularity_score()
-
-# @receiver(post_save, sender=JobInteraction)
-# def update_job_counts_on_interaction_save(sender, instance, **kwargs):
-#     """
-#     Update the job's counts (views, saves, applications) when a JobInteraction is saved.
-#     """
-#     job = instance.job
-#     job.update_counts()  # Update counts based on JobInteraction records
-#     job.update_popularity_score()  # Recalculate popularity score
-
-# @receiver(post_delete, sender=JobInteraction)
-# def update_job_counts_on_interaction_delete(sender, instance, **kwargs):
-#     """
-#     Update the job's counts (views, saves, applications) when a JobInteraction is deleted.
-#     """
-#     job = instance.job
-#     job.update_counts()  # Update counts based on JobInteraction records
-#     job.update_popularity_score()  # Recalculate popularity score
-# jobs/signals.py
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.db.models import F
-from .models import JobInteraction, Job
-
-@receiver(post_save, sender=JobInteraction)
-def update_job_interactions(sender, instance, created, **kwargs):
-    if not created:
-        return
-
-    try:
-        # Update counts based on interaction type
-        if instance.interaction_type == 'VIEW':
-            Job.objects.filter(pk=instance.job_id).update(
-                views_count=F('views_count') + 1
-            )
-        elif instance.interaction_type == 'SAVE':
-            Job.objects.filter(pk=instance.job_id).update(
-                saves_count=F('saves_count') + 1
-            )
-        elif instance.interaction_type == 'APPLY':
-            Job.objects.filter(pk=instance.job_id).update(
-                applications_count=F('applications_count') + 1
-            )
-        
-        # Recalculate popularity score
-        instance.job.update_popularity_score()
-        
-    except Exception as e:
-        print(f"Error updating job interactions: {str(e)}")
 
 @receiver(post_save, sender=Feedback)
 def update_job_popularity_on_feedback(sender, instance, **kwargs):
@@ -86,7 +38,6 @@ def update_engagement_score(sender, instance, **kwargs):
         recruiter_job = instance.job
         user_profile.calculate_engagement_score(recruiter_job)
         user_profile.calculate_recommendation_score(recruiter_job)  # Update recommendation score
-
 
 @receiver(post_save, sender=Job)
 def update_profile_match_score_on_job_change(sender, instance, **kwargs):
@@ -296,8 +247,34 @@ def update_contacts(sender, instance, created, **kwargs):
         traceback.print_exc()
         print("===== Failed =====")
 
-#############################################################
+###Candidat-Focused Job Offer Ranking Model################################################### Tracking interactions candidat->Job Offer >>>Done
+"""Ce signal Django s’active après la création d’une interaction (VIEW, SAVE, ou APPLY) 
+et met à jour les compteurs correspondants dans l’offre d’emploi, puis recalcule son score de popularité."""
+@receiver(post_save, sender=JobInteraction)
+def update_job_interactions(sender, instance, created, **kwargs):
+    if not created:
+        return
 
+    try:
+        # Update counts based on interaction type
+        if instance.interaction_type == 'VIEW':
+            Job.objects.filter(pk=instance.job_id).update(
+                views_count=F('views_count') + 1
+            )
+        elif instance.interaction_type == 'SAVE':
+            Job.objects.filter(pk=instance.job_id).update(
+                saves_count=F('saves_count') + 1
+            )
+        elif instance.interaction_type == 'APPLY':
+            Job.objects.filter(pk=instance.job_id).update(
+                applications_count=F('applications_count') + 1
+            )
+        
+        # Recalculate popularity score
+        instance.job.update_popularity_score()
+        
+    except Exception as e:
+        print(f"Error updating job interactions: {str(e)}")
 
 
 

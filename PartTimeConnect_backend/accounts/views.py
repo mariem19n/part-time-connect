@@ -42,7 +42,7 @@ def get_profile(request, user_id):
     except UserRegistration.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
 
-########################################################################################################## Tracking interactions recruteur-candidat >>>Done
+################################################################################################### Tracking interactions recruteur->candidat >>>Done
 """Ces trois endpoints permettent respectivement d'enregistrer (1) une consultation de profil candidat par un recruteur,
 (2) l'ajout d'un candidat dans une shortlist,et (3) un contact initié par un recruteur, tout en vérifiant
 la validité des données et en gérant les erreurs potentielles."""

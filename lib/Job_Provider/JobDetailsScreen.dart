@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'PostJobScreen.dart';
 import 'job.dart';
+import 'job_interaction_service.dart';
 import 'jobfetch_service.dart';
 import '../AppColors.dart';
 import '../auth_helper.dart';
@@ -127,14 +128,38 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                                   message: 'Save',
                                   child: IconButton(
                                     icon: Icon(Icons.bookmark_border, color: AppColors.borderdarkColor),
-                                    onPressed: () => _confirmDelete(context, job.id),
+                                    //onPressed: () => _confirmDelete(context, job.id),
+                                    onPressed: () async {
+                                      final result = await JobInteractionService.recordSave(job.id);
+                                      if (result['success'] == true) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Job saved successfully')),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to save job: ${result['message']}')),
+                                        );
+                                      }
+                                    },
                                     ),
                                 ),
                                 Tooltip(
                                   message: 'Apply',
                                   child: IconButton(
                                     icon: Icon(Icons.assignment_turned_in, color: AppColors.primary),
-                                    onPressed: () => _confirmDelete(context, job.id),
+                                    //onPressed: () => _confirmDelete(context, job.id),
+                                    onPressed: () async {
+                                      final result = await JobInteractionService.recordApply(job.id);
+                                      if (result['success'] == true) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Application submitted!')),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to apply: ${result['message']}')),
+                                        );
+                                      }
+                                    },
                                 ),
                                 ),
                               ],

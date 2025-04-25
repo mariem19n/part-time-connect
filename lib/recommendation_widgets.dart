@@ -3,6 +3,7 @@ import 'package:flutter_projects/AppColors.dart';
 
 import 'Job_Provider/JobDetailsScreen.dart';
 import 'Job_Provider/interaction_service.dart';
+import 'Job_Provider/job_interaction_service.dart';
 import 'Job_seeker/ProfilePage.dart';
 
 class RecommendationPreview extends StatelessWidget {
@@ -149,14 +150,25 @@ class RecommendationPreview extends StatelessWidget {
       bool success;
 
       if (type == 'jobs') {
-        // Call job save service (you'll need to implement this)
-        print('Saving job: ${item['title']}');
-        // Example: success = await JobService.saveJob(item['id']);
-        // For now we'll use a placeholder:
-        success = true;
+        final result = await JobInteractionService.recordSave(item['id']);
+        success = result['success'] ?? false;
+
+        if (success) {
+          print('Successfully saved job: ${item['title']}');
+        } else {
+          print('Failed to save job: ${result['message']}');
+          // Show error message if save failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save job: ${result['message']}'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return; // Exit early if save failed
+          }
       } else {
-        // Call candidate shortlist service
-        success = await InteractionService.recordShortlist(item['id']);
+        final result = await InteractionService.recordShortlist(item['id']);
+        success = result['success'] ?? false;
 
         if (success) {
           print('Successfully shortlisted candidate: ${item['name']}');

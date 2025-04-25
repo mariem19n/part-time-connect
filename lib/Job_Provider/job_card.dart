@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../Job_Provider/job.dart';
 import '../AppColors.dart';
 import 'JobDetailsScreen.dart';
+import 'job_interaction_service.dart';
 class JobCard extends StatelessWidget {
   final Job job;
   final VoidCallback? onTap;
@@ -23,7 +24,10 @@ class JobCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
+        onTap: () {
+          JobInteractionService.recordView(job.id);
+          if (onTap != null) onTap!();
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -52,16 +56,20 @@ class JobCard extends StatelessWidget {
                           icon: Icon(Icons.bookmark_border,
                               color: AppColors.borderdarkColor,
                               size: 20),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => JobDetailsScreen(jobId: job.id),
-                              ),
-                            );
+                          onPressed: () async {
+                            final result = await JobInteractionService.recordSave(job.id);
+                            if (result['success'] == true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Job saved successfully')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to save job: ${result['message']}')),
+                              );
+                            }
                           },
                         ),
-                      ),
+                  ),
                       const SizedBox(width: 8),
                       Tooltip(
                         message: 'Detail',
@@ -71,13 +79,16 @@ class JobCard extends StatelessWidget {
                           icon: Icon(Icons.remove_red_eye,
                               color: AppColors.primary,
                               size: 20),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => JobDetailsScreen(jobId: job.id),
-                              ),
-                            );
+                          onPressed: () async {
+                            final result = await JobInteractionService.recordView(job.id);
+                            if (result['success'] == true) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => JobDetailsScreen(jobId: job.id),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),

@@ -411,7 +411,8 @@ class _HomePageState extends State<HomePage> {
                   message: 'Initiated chat',
                 );
 
-                if (success) {
+                //if (success) {
+                if (success['success'] == true) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -445,7 +446,8 @@ class _HomePageState extends State<HomePage> {
                 // Record view interaction first
                 final success = await InteractionService.recordView(int.parse(user['id']));
 
-                if (success) {
+                //if (success) {
+                if (success['success'] == true) {
                   int? userId = await getUserId();
                   if (userId != null) {
                     Navigator.push(

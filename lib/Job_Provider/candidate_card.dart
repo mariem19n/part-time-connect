@@ -26,7 +26,6 @@ class CandidateCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        //onTap: onTap,
         onTap: () {
           // Record view when card is tapped
           InteractionService.recordView(candidate['id']);
@@ -84,7 +83,8 @@ class CandidateCard extends StatelessWidget {
                               size: 20),
                           onPressed: () async {
                             final success = await InteractionService.recordShortlist(candidate['id']);
-                            if (success) {
+                            if (success['success'] == true) {
+                            //if (success) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Candidate saved to shortlist')),
                               );
@@ -101,14 +101,6 @@ class CandidateCard extends StatelessWidget {
                           icon: Icon(Icons.remove_red_eye,
                               color: AppColors.primary,
                               size: 20),
-                          /*onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProfilePage(userId: candidate['id']),
-                              ),
-                            );
-                          },*/
                           onPressed: () {
                             InteractionService.recordView(candidate['id']);
                             Navigator.push(
@@ -129,21 +121,10 @@ class CandidateCard extends StatelessWidget {
                           icon: Icon(Icons.message,
                               color: AppColors.primary,
                               size: 20),
-                          /*onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatScreen(
-                                  receiverId: candidate['id'].toString(),
-                                  receiverType: 'user',
-                                  receiverName: candidate['username'],
-                                ),
-                              ),
-                            );
-                          },*/
                           onPressed: () async {
                             final success = await InteractionService.recordContact(candidate['id']);
-                            if (success) {
+                            if (success['success'] == true) {
+                            //if (success) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

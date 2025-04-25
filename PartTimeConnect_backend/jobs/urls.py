@@ -1,7 +1,7 @@
 # jobs/urls.py
 from django.urls import path
 from . import views
-from .views import job_list,create_job_offer, delete_job_offer, get_jobs
+from .views import job_list,create_job_offer, delete_job_offer, get_jobs ,view_job, save_job,apply_job
 
 urlpatterns = [
 
@@ -10,10 +10,8 @@ urlpatterns = [
     path('offer/',create_job_offer, name='job-offer'),
     path('offer/<int:job_id>/', delete_job_offer, name='delete-job-offer'),
     path('get_jobs/', get_jobs, name='get_jobs'),
-
-
-    path("job/<int:job_id>/view/", views.view_job, name="view_job"),
-    path("job/<int:job_id>/save/", views.save_job, name="save_job"),
-    path("job/<int:job_id>/apply/", views.apply_job, name="apply_job"),
+    path("<int:job_id>/view/", views.view_job, name="view_job"),
+    path("<int:job_id>/save/", views.save_job, name="save_job"),
+    path("<int:job_id>/apply/", views.apply_job, name="apply_job"),
 
 ]

@@ -206,21 +206,214 @@ def job_details(request, job_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 ###########################################################################Recommendation
+# def save_job(request, job_id):
+#     job = get_object_or_404(Job, id=job_id)
+#     JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='SAVE')
+#     return JsonResponse({"message": "Job saved", "popularity_score": job.popularity_score})
+
+# def apply_job(request, job_id):
+#     job = get_object_or_404(Job, id=job_id)
+#     JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='APPLY')
+#     return JsonResponse({"message": "Application submitted", "popularity_score": job.popularity_score})
+@csrf_exempt
+@require_POST
 def view_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='VIEW')
-    return JsonResponse({"message": "Job viewed", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting view_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating view interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='VIEW'
+        )
+        
+        print("===== Interaction recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in view_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@csrf_exempt
+@require_POST
 def save_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='SAVE')
-    return JsonResponse({"message": "Job saved", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting save_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        if not request.user.is_authenticated:
+            print("User not authenticated - returning 401")
+            return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+            
+        user_id = request.user.id
+        print(f"Creating save interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='SAVE'
+        )
+        
+        print("===== Save recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in save_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@csrf_exempt
+@require_POST
 def apply_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='APPLY')
-    return JsonResponse({"message": "Application submitted", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting apply_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        if not request.user.is_authenticated:
+            print("User not authenticated - returning 401")
+            return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+            
+        user_id = request.user.id
+        print(f"Creating apply interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='APPLY'
+        )
+        
+        print("===== Application recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in apply_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@csrf_exempt
+@require_POST
+def save_job(request, job_id):
+    print(f"\n===== Starting save_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating save interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='SAVE'
+        )
+        
+        print("===== Save recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in save_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@csrf_exempt
+@require_POST
+def apply_job(request, job_id):
+    print(f"\n===== Starting apply_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating apply interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='APPLY'
+        )
+        
+        print("===== Application recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in apply_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+# @csrf_exempt
+# @require_POST
+# def save_job(request, job_id):
+#     try:
+#         user = request.user
+#         if not user.is_authenticated:
+#             return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+            
+#         JobInteraction.objects.create(
+#             job_id=job_id,
+#             user=user,
+#             interaction_type='SAVE'
+#         )
+#         return JsonResponse({'status': 'success'})
+#     except Exception as e:
+#         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+# @csrf_exempt
+# @require_POST
+# def apply_job(request, job_id):
+#     try:
+#         user = request.user
+#         if not user.is_authenticated:
+#             return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+            
+#         JobInteraction.objects.create(
+#             job_id=job_id,
+#             user=user,
+#             interaction_type='APPLY'
+#         )
+#         return JsonResponse({'status': 'success'})
+#     except Exception as e:
+#         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 

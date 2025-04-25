@@ -22,107 +22,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage
-
-
-# accounts/views.py
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-import json
-from jobs.models import RecruiterView, Shortlist, RecruiterContact  # Add this import
-
-# accounts/views.py
-@csrf_exempt
-@require_POST
-def record_recruiter_view(request):
-    try:
-        data = json.loads(request.body)
-        recruiter_id = data.get('recruiter_id')
-        candidate_user_id = data.get('candidate_id')
-        
-        if not recruiter_id or not candidate_user_id:
-            return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
-            
-        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
-        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
-        
-        # Get or create the candidate profile
-        candidate_profile, created = UserProfile.objects.get_or_create(
-            user=candidate_user,
-            defaults={
-                'full_name': candidate_user.username,
-                'skills': []
-            }
-        )
-        
-        # Create the view record
-        RecruiterView.objects.create(
-            recruiter=recruiter,
-            candidate=candidate_profile
-        )
-        
-        # Update candidate's profile views count
-        candidate_profile.profile_views += 1
-        candidate_profile.save()
-        
-        return JsonResponse({'status': 'success'})
-    except CompanyRegistration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
-    except UserRegistration.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-@csrf_exempt
-@require_POST
-def record_shortlist(request):
-    try:
-        data = json.loads(request.body)
-        recruiter_id = data.get('recruiter_id')
-        candidate_user_id = data.get('candidate_id')  # This should be UserRegistration ID
-        
-        from accounts.models import CompanyRegistration, UserProfile, UserRegistration
-        from jobs.models import Shortlist
-        
-        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
-        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
-        candidate_profile = candidate_user.profile
-        
-        Shortlist.objects.create(
-            recruiter=recruiter,
-            candidate=candidate_profile
-        )
-        
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-@csrf_exempt
-@require_POST
-def record_recruiter_contact(request):
-    try:
-        data = json.loads(request.body)
-        recruiter_id = data.get('recruiter_id')
-        candidate_user_id = data.get('candidate_id')  # This should be UserRegistration ID
-        message = data.get('message', '')
-        
-        from accounts.models import CompanyRegistration, UserProfile, UserRegistration
-        from jobs.models import RecruiterContact
-        
-        recruiter = CompanyRegistration.objects.get(id=recruiter_id)
-        candidate_user = UserRegistration.objects.get(id=candidate_user_id)
-        candidate_profile = candidate_user.profile
-        
-        RecruiterContact.objects.create(
-            recruiter=recruiter,
-            candidate=candidate_profile,
-            message=message
-        )
-        
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
 ######################################################################################################## Profile Page
 @csrf_exempt
 @api_view(['GET'])
@@ -141,6 +41,123 @@ def get_profile(request, user_id):
         }, status=200)
     except UserRegistration.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
+
+########################################################################################################## Tracking interactions recruteur-candidat >>>Done
+"""Ces trois endpoints permettent respectivement d'enregistrer (1) une consultation de profil candidat par un recruteur,
+(2) l'ajout d'un candidat dans une shortlist,et (3) un contact initié par un recruteur, tout en vérifiant
+la validité des données et en gérant les erreurs potentielles."""
+@csrf_exempt
+@require_POST
+def record_recruiter_view(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import RecruiterView
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            RecruiterView.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def record_shortlist(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import Shortlist
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            Shortlist.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def record_recruiter_contact(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        message = data.get('message', '')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import RecruiterContact
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            RecruiterContact.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile,
+                message=message
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 ########################################################################################################## Get candidat Home Page Job Provider >>>Done
 @api_view(['GET'])

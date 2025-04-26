@@ -10,6 +10,7 @@ import '../Job_Provider/candidate_card.dart';
 import '../Job_Provider/candidate_service.dart';
 import '../Job_Provider/interaction_service.dart';
 import '../Job_Provider/job_card.dart';
+import '../Job_Provider/saved_candidates_screen.dart';
 import '../UserRole.dart';
 import 'package:flutter_projects/services/recommendation_service.dart';
 import '../auth_helper.dart';
@@ -286,6 +287,23 @@ class _HomePageState extends State<HomePage> {
                               padding: EdgeInsets.zero,
                               constraints: BoxConstraints(),
                             ),
+                            SizedBox(width: 8), // Add some spacing between icons
+                            IconButton(
+                              icon: Icon(Icons.bookmark, size: 20),
+                              onPressed: () {
+                                // Add your save functionality here
+                                if (!isJobSeeker) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ShortlistedCandidatesScreen()
+                                    ),
+                                  );
+                                }
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: BoxConstraints(),
+                            ),
                           ],
                         ),
                       ),
@@ -365,7 +383,7 @@ class _HomePageState extends State<HomePage> {
       subtitle: Text(isCandidate ? 'Job Seeker' : 'Recruiter'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min, // Keep the row compact
-        /*children: [
+        children: [
           // Message Icon
           IconButton(
             icon: Icon(Icons.message,size: 20, color: AppColors.primary),
@@ -394,77 +412,6 @@ class _HomePageState extends State<HomePage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => ProfilePage(userId: userId)),
-                );
-              }
-            },
-          ),
-        ],*/
-        children: [
-          // Message Icon
-          IconButton(
-            icon: Icon(Icons.message, size: 20, color: AppColors.primary),
-            onPressed: () async {
-              try {
-                // Record contact interaction first
-                final success = await InteractionService.recordContact(
-                  int.parse(user['id']),
-                  message: 'Initiated chat',
-                );
-
-                //if (success) {
-                if (success['success'] == true) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        receiverId: user['id'].toString(),
-                        receiverType: user['user_type'] == 'JobSeeker'
-                            ? 'user'
-                            : 'company',
-                        receiverName: user['username'],
-                      ),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to initiate chat')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: ${e.toString()}')),
-                );
-              }
-            },
-          ),
-
-          // Profile View Icon
-          IconButton(
-            icon: Icon(Icons.person, size: 20, color: AppColors.primary),
-            onPressed: () async {
-              try {
-                // Record view interaction first
-                final success = await InteractionService.recordView(int.parse(user['id']));
-
-                //if (success) {
-                if (success['success'] == true) {
-                  int? userId = await getUserId();
-                  if (userId != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage(userId: userId),
-                      ),
-                    );
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to record view')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: ${e.toString()}')),
                 );
               }
             },

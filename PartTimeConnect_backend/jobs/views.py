@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Job, JobInteraction, JobApplication
+from .models import Job, JobInteraction, JobApplication, Shortlist
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +10,80 @@ import json
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http.multipartparser import MultiPartParser, MultiPartParserError
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required
+from .models import Shortlist, UserProfile, UserRegistration
+import json
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+########################################################################## Get saved  candidat from shortlist >> Done
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+@require_GET
+def get_shortlisted_candidates(request):
+    print(f"Request headers: {request.headers}")  # Debug headers
+    
+    print(f"Authenticated as: {request.user}")  # Debug user
+    
+    try:
+        recruiter = CompanyRegistration.objects.get(username=request.user.username)
+        print(f"Found recruiter: {recruiter.username}")
+        
+        shortlists = Shortlist.objects.filter(
+            recruiter=recruiter
+        ).select_related('candidate', 'candidate__user')
+        
+        data = [{
+            'user_id': sl.candidate.user.id,
+            'user_name': sl.candidate.full_name,
+            'shortlisted_at': sl.shortlisted_at.strftime('%Y-%m-%d'),
+            'skills': sl.candidate.skills,
+        } for sl in shortlists]
+        
+        return JsonResponse(data, safe=False)
+        
+    except CompanyRegistration.DoesNotExist:
+        return JsonResponse(
+            {'error': 'Only recruiters can access this endpoint'},
+            status=403
+        )
+
+########################################################################## unsaved a candidat from shortlist >> Done
+@api_view(['DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def remove_from_shortlist(request, candidate_id):
+    print("\n=== DELETE FROM SHORTLIST ===")
+    print(f"Candidate ID: {candidate_id}")
+    
+    try:
+        recruiter = CompanyRegistration.objects.get(username=request.user.username)
+        print(f"Recruiter: {recruiter.username}")
+        
+        deleted_count, _ = Shortlist.objects.filter(
+            recruiter=recruiter,
+            candidate_id=candidate_id
+        ).delete()
+        
+        print(f"Deleted {deleted_count} entries")
+        
+        if deleted_count == 0:
+            print("Warning: No matching record found")
+            return JsonResponse({'status': 'not found'}, status=404)
+            
+        return JsonResponse({'status': 'success'})
+        
+    except CompanyRegistration.DoesNotExist:
+        print("Recruiter not found")
+        return JsonResponse({'error': 'Only recruiters can delete candidates'}, status=403)
+        
+    except Exception as e:
+        print("Error:", str(e))
+        return JsonResponse({'error': str(e)}, status=500)
 ########################################################################## update job applications status of an job offer X >> Done
 @csrf_exempt
 @require_http_methods(["PUT"])

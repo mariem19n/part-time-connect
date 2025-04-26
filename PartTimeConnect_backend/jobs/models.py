@@ -80,7 +80,6 @@ class Job(models.Model):
         self.views_count = self.interactions.filter(interaction_type='VIEW').count()
         self.saves_count = self.interactions.filter(interaction_type='SAVE').count()
         self.save(update_fields=['applications_count', 'views_count', 'saves_count'])
-
 ##############################>>>Represents a user's application to a job.
 class JobApplication(models.Model):
     APPLICATION_STATUS = [
@@ -102,7 +101,6 @@ class JobApplication(models.Model):
 
     def __str__(self):
         return f"{self.user.full_name} - {self.job.title} ({self.status})"
-
 ###############################>>>Tracks when a recruiter views a candidate profile.
 class RecruiterView(models.Model):
     recruiter = models.ForeignKey(CompanyRegistration, on_delete=models.CASCADE, related_name="views")

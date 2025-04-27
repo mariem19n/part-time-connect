@@ -43,7 +43,6 @@ class _ChatScreenState extends State<ChatScreen> {
     await _initWebSocket();
     await _loadPreviousMessages();
   }
-
   Future<void> _initWebSocket() async {
     final token = await getToken();
     if (token == null) {
@@ -69,17 +68,24 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       onMessage: (data) {
         if (mounted) {
+          debugPrint('📩 Received WebSocket data: $data');
           try {
             final messageData = jsonDecode(data);
+            debugPrint('Received WebSocket data: $messageData');
 
-            if (messageData['type'] == 'chat_message') {
+            // Handle both message types from backend
+            if (messageData['type'] == 'chat.message') {
               setState(() {
-                // Remove any temporary message with same temp_id
-                _messages.removeWhere((msg) => msg['temp_id'] == messageData['temp_id']);
+                // Check if this is a response to our temp message
+                final tempId = messageData['message']['temp_id'];
+                if (tempId != null) {
+                  _messages.removeWhere((msg) => msg['temp_id'] == tempId);
+                }
 
-                // Add the server-confirmed message
+                // Add the new message
                 _messages.insert(0, {
                   ...messageData['message'],
+                  'isMe': messageData['message']['sender_id'] == _currentUserId,
                   'status': 'delivered',
                 });
               });
@@ -100,63 +106,79 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await _webSocketService.connect();
   }
-
-  Future<void> _loadPreviousMessages() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/chat/messages/?receiver_id=${widget.receiverId}&receiver_type=${widget.receiverType}'),
-        headers: {'Authorization': 'Token ${await getToken()}'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final messages = data['messages'] as List;
-
-        setState(() {
-          _messages.addAll(messages.map<Map<String, dynamic>>((m) {
-            final message = m as Map<String, dynamic>;
-            final sender = message['sender'] as Map<String, dynamic>;
-            return {
-              ...message,
-              'sender_id': sender['id'].toString(), // Ensure sender_id exists
-              'isMe': sender['id'].toString() == _currentUserId?.toString(),
-            };
-          }).toList());
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading messages: $e');
-    }
-  }
   void _sendMessage() async {
     if (_messageController.text.isEmpty || !_isConnected) return;
 
     final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+    final timestamp = DateTime.now().toIso8601String();
 
+    // Create message with proper structure
     final message = {
       'type': 'chat_message',
       'receiver_id': widget.receiverId,
       'receiver_type': widget.receiverType,
       'content': _messageController.text,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': timestamp,
       'temp_id': tempId,
     };
+    debugPrint('📤 Sending message: ${jsonEncode(message)}');
 
     // Add to local list immediately
     setState(() {
       _messages.insert(0, {
-        ...message,
+        'id': tempId,
+        'content': _messageController.text,
+        'timestamp': timestamp,
         'sender_id': _currentUserId,
         'sender_type': _currentUserType,
-        'id': tempId,
+        'receiver_id': widget.receiverId,
+        'receiver_type': widget.receiverType,
+        'temp_id': tempId,
         'status': 'sending',
+        'isMe': true,
       });
     });
 
     _webSocketService.send(jsonEncode(message));
     _messageController.clear();
   }
+  Future<void> _loadPreviousMessages() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/chat/conversation/?other_id=${widget.receiverId}&other_type=${widget.receiverType}'),
+        headers: {'Authorization': 'Token ${await getToken()}'},
+      );
 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final messages = (data['messages'] as List).cast<Map<String, dynamic>>();
+
+        debugPrint('Loaded ${messages.length} conversation messages');
+
+        if (mounted) {
+          setState(() {
+            _messages.clear();
+            _messages.addAll(messages.map((message) {
+              // Debug print each message
+              debugPrint('Processing message: ${message['id']} '
+                  'from ${message['sender']?['id']} '
+                  '(isMe: ${message['isMe']})');
+
+              return {
+                ...message,
+                // Ensure sender_id exists
+                'sender_id': message['sender']?['id']?.toString(),
+                // Ensure isMe is properly set
+                'isMe': message['isMe'] ?? false,
+              };
+            }));
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading conversation: $e');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

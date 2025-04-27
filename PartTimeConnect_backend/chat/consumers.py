@@ -15,8 +15,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 
+
 class ChatConsumer(AsyncWebsocketConsumer):
-    ######################################################"okay"
+######Connection Management################################################ Gère nouvelle connexion WebSocket >>>Done
     async def connect(self):
         print("\n🔵 New WebSocket connection attempt")
     
@@ -72,6 +73,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"🔴 Connection error: {str(e)}")
             await self.close(code=4000)
+######Authentication Helpers################################################ Trouve profil utilisateur >>>Done
     @database_sync_to_async
     def get_custom_user(self, user):
         """Get either UserRegistration or CompanyRegistration for the user"""
@@ -100,6 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"🔴 Error getting custom user: {e}")
             return None
+######Authentication Helpers################################################ Authentifie via token >>>Done
     @database_sync_to_async
     def get_user_from_token(self, token_key):
         try:
@@ -124,7 +127,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return user
         except Token.DoesNotExist:
             return AnonymousUser()
-
+######Connection Management################################################# Gère déconnexion WebSocket >>>Done
     async def disconnect(self, close_code):
         print(f"🟠 Déconnexion WebSocket (code: {close_code})")
         # Leave room group
@@ -133,8 +136,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 self.channel_name
             )
-    #######################################################""
-    # Receive message from WebSocket
+######Message Handling###################################################### Reçoit messages entrants >>>Done
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
@@ -153,35 +155,46 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'error': str(e),
                 'type': 'error'
             }))
-    ######################################################"okay"
+######Message Handling###################################################### Traite messages chat >>>
     async def handle_chat_message(self, data):
         try:
-            # Determine sender type and get the appropriate sender instance
-            if hasattr(self.user, 'userregistration'):
-                sender_user = self.user.userregistration
+            print(f"\n🔵 Handling chat message with data: {data}")
+
+            # Get the custom user profile (UserRegistration or CompanyRegistration)
+            custom_user = await self.get_custom_user(self.user)
+            if not custom_user:
+                raise ValueError("No custom user profile found")
+
+            # Determine sender type based on the custom user
+            if isinstance(custom_user, UserRegistration):
+                sender_user = custom_user
                 sender_company = None
                 sender_type = 'user'
-            elif hasattr(self.user, 'companyregistration'):
+            elif isinstance(custom_user, CompanyRegistration):
                 sender_user = None
-                sender_company = self.user.companyregistration
+                sender_company = custom_user
                 sender_type = 'company'
             else:
                 raise ValueError("Unknown sender type")
-            
+
+            print(f"🟢 Sender identified: {sender_type} {sender_user.id if sender_user else sender_company.id}")
+
             # Prepare receiver data
             receiver_id = data['receiver_id']
             receiver_type = data['receiver_type']
             
             # Get receiver instance
             if receiver_type == 'user':
-                receiver_user = await sync_to_async(UserRegistration.objects.get)(id=receiver_id)
+                receiver_user = await database_sync_to_async(UserRegistration.objects.get)(id=receiver_id)
                 receiver_company = None
             else:
                 receiver_user = None
-                receiver_company = await sync_to_async(CompanyRegistration.objects.get)(id=receiver_id)
-            
+                receiver_company = await database_sync_to_async(CompanyRegistration.objects.get)(id=receiver_id)
+
+            print(f"🟢 Receiver identified: {receiver_type} {receiver_id}")
+
             # Save message to database
-            message = await sync_to_async(Message.objects.create)(
+            message = await database_sync_to_async(Message.objects.create)(
                 sender_user=sender_user,
                 sender_company=sender_company,
                 receiver_user=receiver_user,
@@ -191,7 +204,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 attachment=data.get('attachment'),
                 status='delivered'
             )
-            
+            print(f"🟢 Message saved to DB with ID: {message.id}")
+
             # Prepare response data
             response_data = {
                 'id': str(message.id),
@@ -208,11 +222,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Add attachment URL if exists
             if message.attachment:
                 response_data['attachment'] = self.scope['request'].build_absolute_uri(message.attachment.url)
-            
-            # Determine receiver's room name
-            receiver_room = f"chat_{receiver_type}_{receiver_id}"
-            
-            # Send to receiver (not back to sender)
+
+            # Determine rooms (consistent with connect() naming)
+            receiver_room = f"{receiver_type}_{receiver_id}"  # Changed from chat_{receiver_type}_{receiver_id}
+            sender_room = f"{sender_type}_{sender_user.id if sender_user else sender_company.id}"  # Changed from chat_ prefix
+
+            print(f"📤 Sending to rooms - Receiver: {receiver_room}, Sender: {sender_room}")
+
+            # Send to receiver (if not self-message)
             if str(sender_user.id if sender_user else sender_company.id) != receiver_id:
                 await self.channel_layer.group_send(
                     receiver_room,
@@ -221,9 +238,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message': response_data
                     }
                 )
-            
-            # Also send back to sender for their own UI update
-            sender_room = f"chat_{sender_type}_{sender_user.id if sender_user else sender_company.id}"
+                print(f"📨 Message sent to receiver room: {receiver_room}")
+
+            # Always send back to sender for UI update
             await self.channel_layer.group_send(
                 sender_room,
                 {
@@ -231,14 +248,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'message': response_data
                 }
             )
-            
+            print(f"📩 Message sent to sender room: {sender_room}")
+
         except Exception as e:
-            logger.error(f"Error handling chat message: {str(e)}")
-            await self.send_json({
+            error_msg = f"🔴 Error handling chat message: {str(e)}"
+            print(error_msg)
+            import traceback
+            traceback.print_exc()
+            
+            await self.send(text_data=json.dumps({
                 'type': 'error',
-                'message': f"Failed to send message: {str(e)}"
-            })
-    #######################################################""
+                'message': error_msg
+            }))
+# #######################################################
     async def handle_job_application(self, data):
         # In a real app, you'd create a JobApplication here
         job_application = await self.create_job_application(
@@ -299,11 +321,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    # Handler for chat messages from room group
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event))
 
-    # Handler for notifications from room group
     async def notification(self, event):
         await self.send(text_data=json.dumps(event))
     @database_sync_to_async
@@ -347,7 +367,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error saving message: {e}")
             raise
-
 
     @database_sync_to_async
     def create_job_application(self, user_id, job_id, message=None):
@@ -423,7 +442,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'username': viewer.companyregistration.username,
                 'jobtype': viewer.companyregistration.jobtype
             }
-    
+
     @database_sync_to_async
     def get_chat_messages(self, user, receiver_id, receiver_type):
         if receiver_type == 'user':

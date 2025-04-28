@@ -197,6 +197,48 @@ def apply_job(request, job_id):
     JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='APPLY')
     return JsonResponse({"message": "Application submitted", "popularity_score": job.popularity_score})
 
+###########################################################################Apply to job
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from accounts.models import UserProfile
+from .models import Job, JobApplication
+import json
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
+@api_view(['POST'])
+def apply_to_job(request):
+    try:
+        data = json.loads(request.body)
 
+        user_id = data.get('user_id')
+        job_id = data.get('job_id')
+        message = data.get('message', '')
+        expected_salary = data.get('expected_salary')
+        available_now = data.get('available_now', False)
 
+        if not user_id or not job_id:
+            return Response({'error': 'user_id and job_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_profile = UserProfile.objects.get(user_id=user_id)  # user_id est le FK vers UserRegistration
+        job = Job.objects.get(id=job_id)
+
+        JobApplication.objects.create(
+            user=user_profile,
+            job=job,
+            message=message,
+            expected_salary=expected_salary,
+            available_now=available_now,
+            duration=job.duration,  # On prend la durée de l'offre
+            status='Applied'
+        )
+
+        return Response({'message': 'Application submitted successfully'}, status=status.HTTP_201_CREATED)
+
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

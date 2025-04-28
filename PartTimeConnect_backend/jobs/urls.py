@@ -1,7 +1,8 @@
 # jobs/urls.py
 from django.urls import path
 from . import views
-from .views import job_list,create_job_offer, delete_job_offer
+from .views import job_list,create_job_offer, delete_job_offer , apply_to_job
+
 
 urlpatterns = [
 
@@ -14,5 +15,5 @@ urlpatterns = [
     path("job/<int:job_id>/view/", views.view_job, name="view_job"),
     path("job/<int:job_id>/save/", views.save_job, name="save_job"),
     path("job/<int:job_id>/apply/", views.apply_job, name="apply_job"),
-
+    path('api/apply_to_job/', apply_to_job, name='apply_to_job'),
 ]

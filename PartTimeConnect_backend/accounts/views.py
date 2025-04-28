@@ -97,15 +97,37 @@ def get_profile(request, user_id):
 
     try:
         user = UserRegistration.objects.get(id=user_id)
+        profile = user.profile  # accès via related_name="profile"
+
         return JsonResponse({
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            #"location": user.location,
-            "key_skills": user.skills.split(",") if user.skills else []
+            "user_type": user.user_type,
+            "key_skills": user.skills.split(",") if user.skills else [],
+            "resumes": user.get_resumes(),
+
+            "profile": {
+                "full_name": profile.full_name,
+                "phone": profile.phone,
+                "preferred_locations": profile.preferred_locations,
+                "about_me": profile.about_me,
+                "skills": profile.skills,
+                "education_certifications": profile.education_certifications,
+                "languages_spoken": profile.languages_spoken,
+                "portfolio": profile.portfolio,
+
+                "experience": list(profile.experience.values(
+                    "id", "job__title", "job__company", "job__location", "application_date", "status"
+                ))
+            }
         }, status=200)
+
     except UserRegistration.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "User profile not found"}, status=404)
+
 ########################################################################################################### Registration_Company Backend >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -307,6 +329,7 @@ def loginPage(request):
                 user = User.objects.get_or_create(username=job_seeker.username)[0]
                 token, created = Token.objects.get_or_create(user=user)
                 print(f"Generated token: {token.key}")  # Debug line in Django
+                
                 return JsonResponse({
                     'message': 'Job seeker login successful',
                     'id': job_seeker.id,  # ✅ Added ID field

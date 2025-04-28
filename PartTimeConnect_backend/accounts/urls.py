@@ -1,7 +1,8 @@
 # urls.py
 from django.urls import path
 from . import views
-from .views import update_user_location
+from .views import update_user_location, get_profile
+
 
 
 urlpatterns = [
@@ -17,6 +18,8 @@ urlpatterns = [
     path('profile/<int:user_id>/', views.get_profile, name='profile'),
     path('get-token/', views.generate_token),
     path('update_user_location/', update_user_location, name='update_user_location'),
+    #path('accounts/get_profile/<int:user_id>/', get_profile, name='get_profile'),
+    path('get_profile/<int:user_id>/', get_profile, name='get_profile'),
 ]
 
 

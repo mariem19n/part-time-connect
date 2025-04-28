@@ -18,40 +18,203 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie, csrf_
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage,FileSystemStorage
 import traceback
-
-
-# views.py
-@api_view(['POST'])
-def generate_token(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    try:
-        user = UserRegistration.objects.get(username=username)
-        if check_password(password, user.password):  # Verify hashed password
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
-    except UserRegistration.DoesNotExist:
-        pass
-    
-    return Response({'error': 'Invalid credentials'}, status=400)
-########################################################################################################### Update Location
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from django.views.decorators.csrf import csrf_exempt
-import json
-from .models import UserProfile
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage
+from django.views.decorators.http import require_POST
 
+
+################################################################################################### Tracking interactions recruteur->candidat >>>Done
+"""Ces trois endpoints permettent respectivement d'enregistrer (1) une consultation de profil candidat par un recruteur,
+(2) l'ajout d'un candidat dans une shortlist,et (3) un contact initié par un recruteur, tout en vérifiant
+la validité des données et en gérant les erreurs potentielles."""
+@csrf_exempt
+@require_POST
+def record_recruiter_view(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import RecruiterView
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            RecruiterView.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def record_shortlist(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import Shortlist
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            Shortlist.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def record_recruiter_contact(request):
+    try:
+        data = json.loads(request.body)
+        recruiter_id = data.get('recruiter_id')
+        candidate_user_id = data.get('candidate_id')
+        message = data.get('message', '')
+        
+        if not recruiter_id or not candidate_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing recruiter_id or candidate_id'}, status=400)
+            
+        from accounts.models import CompanyRegistration, UserRegistration
+        from jobs.models import RecruiterContact
+        
+        try:
+            recruiter = CompanyRegistration.objects.get(id=recruiter_id)
+            candidate_user = UserRegistration.objects.get(id=candidate_user_id)
+            
+            if not hasattr(candidate_user, 'profile'):
+                return JsonResponse({'status': 'error', 'message': 'Candidate has no profile'}, status=400)
+                
+            RecruiterContact.objects.create(
+                recruiter=recruiter,
+                candidate=candidate_user.profile,
+                message=message
+            )
+            return JsonResponse({'status': 'success'})
+            
+        except CompanyRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recruiter not found'}, status=404)
+        except UserRegistration.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Candidate not found'}, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+########################################################################################################## Get candidat Home Page Job Provider >>>Done
+@api_view(['GET'])
+def get_candidates(request):
+    search_query = request.GET.get('search', '')
+    skills_filter = request.GET.get('skills', '').split(',') if request.GET.get('skills') else []
+    
+    # Get candidates with profiles only
+    candidates = UserRegistration.objects.filter(
+        user_type='JobSeeker',
+        profile__isnull=False  # Only include users with profiles
+    ).select_related('profile')
+    
+    # Apply search filter if provided
+    if search_query:
+        candidates = candidates.filter(
+            Q(username__icontains=search_query) |
+            Q(profile__full_name__icontains=search_query)
+        )
+    
+    # Apply skills filter if provided
+    if skills_filter:
+        candidates = candidates.filter(profile__skills__overlap=skills_filter)
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(candidates, 10)
+    
+    try:
+        candidates_page = paginator.page(page)
+    except EmptyPage:
+        return JsonResponse({"error": "Page not found"}, status=404)
+    
+    candidate_list = []
+    for candidate in candidates_page:
+        try:
+            profile = candidate.profile
+            candidate_list.append({
+                "id": candidate.id,
+                "username": candidate.username,
+                "full_name": profile.full_name if profile.full_name else candidate.username,
+                "about_me": profile.about_me if profile.about_me else "No description available",
+                "skills": profile.skills if hasattr(profile, 'skills') else [],
+                "profile_picture": None,  # Add if you have profile pictures
+            })
+        except UserProfile.DoesNotExist:
+            # Skip candidates without profiles
+            continue
+    
+    return JsonResponse({
+        "count": paginator.count,
+        "results": candidate_list,
+    }, safe=False)
+########################################################################################################## Update Location >>>Done
 @csrf_exempt
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def update_user_location(request):
     try:
+        # Get the token user
+        token_user = request.user
+        
+        # Find the corresponding UserRegistration
+        try:
+            user_registration = UserRegistration.objects.get(username=token_user.username)
+        except UserRegistration.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'User registration not found'
+            }, status=404)
+        
         # Get or create user profile
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile, created = UserProfile.objects.get_or_create(user=user_registration)
         
         # Parse JSON data from request body
         data = json.loads(request.body)
@@ -129,6 +292,24 @@ def get_profile(request, user_id):
         return JsonResponse({"error": "User profile not found"}, status=404)
 
 ########################################################################################################### Registration_Company Backend >>> Done
+#############################################################################Messagerie search box >>>Done
+def search_users(request):
+    query = request.GET.get('q', '')
+    
+    # Search both UserRegistration and CompanyRegistration
+    users = UserRegistration.objects.filter(
+        Q(username__icontains=query) |
+        Q(email__icontains=query)
+    ).values('id', 'username', 'email', 'user_type')[:10]  # Parenthèse fermante ajoutée ici
+    
+    companies = CompanyRegistration.objects.filter(
+        Q(username__icontains=query) |
+        Q(email__icontains=query)
+    ).values('id', 'username', 'email', 'user_type')[:10]  # Parenthèse fermante ajoutée ici
+    
+    results = list(users) + list(companies)
+    return JsonResponse(results, safe=False)
+########################################################################################################### Registration_Company Backend + Token >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
 def companyRegistration(request):
@@ -144,8 +325,19 @@ def companyRegistration(request):
             user_type = request.POST.get('user_type')
 
             # Validate required fields
-            if not username or not email or not password or not jobtype or not photos or not company_description:
-                return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+            required_fields = ['username', 'email', 'password', 'jobtype', 'company_description']
+            missing_fields = [field for field in required_fields if not request.POST.get(field)]
+            if missing_fields or not photos:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Missing required fields: {", ".join(missing_fields)}'
+                }, status=400)
+            # Check for existing company
+            if CompanyRegistration.objects.filter(username=username).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Company with this username already exists'
+                }, status=400)
 
             # Hash the password
             hashed_password = make_password(password)
@@ -167,17 +359,42 @@ def companyRegistration(request):
             company_registration.set_photos(saved_files)  # Store photo paths as a JSON string
             company_registration.save()
 
+            # Store photo paths
+            if hasattr(company_registration, 'set_photos'):
+                company_registration.set_photos(saved_files)
+            else:
+                company_registration.photos = json.dumps(saved_files)
+
+            company_registration.save()
+
+
+            # Create corresponding Django User and token (same as login approach)
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            token, created = Token.objects.get_or_create(user=user)
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Company registered successfully!',
-                'files': saved_files
+                'id': company_registration.id,
+                #'files': saved_files,
+                'user_type': user_type,
+                'username': username,
+                'email': email,
+                'jobtype': jobtype,
+                'company_description': company_description,
+                'photos': saved_files,
+                'token': token.key
             }, status=201)
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-########################################################################################################### Registration_User Backend >>> Done
+########################################################################################################### Registration_User Backend + Token >>> Done
 @csrf_exempt
 @require_http_methods(["POST"])
 def registerPage(request):
@@ -211,7 +428,6 @@ def registerPage(request):
                     'status': 'error',
                     'message': f'Missing required fields: {", ".join(missing_fields)}'
                 }, status=400)
-
             # Hash the password
             hashed_password = make_password(password)
             print("Password hashed successfully.")
@@ -242,13 +458,24 @@ def registerPage(request):
             print("Resume paths stored in UserRegistration object.")
             user_registration.save()
             print("UserRegistration object saved to the database.")
-
+            # Create corresponding Django User and token (same as login approach)
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            token, created = Token.objects.get_or_create(user=user)
             return JsonResponse({
                 'status': 'success',
                 'message': 'User registered successfully!',
                 'id': user_registration.id,
                 'files': saved_files,
-                # 'profile_created': created
+                'user_type': user_type,
+                'username': username,
+                'email': email,
+                'skills': skills,
+                'resumes': saved_files,
+                'token': token.key
             }, status=201)
 
 
@@ -258,7 +485,7 @@ def registerPage(request):
             traceback.print_exc()  # This will print the full traceback
             return JsonResponse({
                 'status': 'error',
-                'message': 'An error occurred during registration'
+                'message': str(e)
             }, status=500)
     
     return JsonResponse({

@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Job, JobInteraction
+from .models import Job, JobInteraction, JobApplication, Shortlist
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +9,111 @@ from accounts.models import CompanyRegistration
 import json
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http.multipartparser import MultiPartParser, MultiPartParserError
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required
+from .models import Shortlist, UserProfile, UserRegistration
+import json
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+########################################################################## Get saved  candidat from shortlist >> Done
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+@require_GET
+def get_shortlisted_candidates(request):
+    print(f"Request headers: {request.headers}")  # Debug headers
+    
+    print(f"Authenticated as: {request.user}")  # Debug user
+    
+    try:
+        recruiter = CompanyRegistration.objects.get(username=request.user.username)
+        print(f"Found recruiter: {recruiter.username}")
+        
+        shortlists = Shortlist.objects.filter(
+            recruiter=recruiter
+        ).select_related('candidate', 'candidate__user')
+        
+        data = [{
+            'user_id': sl.candidate.user.id,
+            'user_name': sl.candidate.full_name,
+            'shortlisted_at': sl.shortlisted_at.strftime('%Y-%m-%d'),
+            'skills': sl.candidate.skills,
+        } for sl in shortlists]
+        
+        return JsonResponse(data, safe=False)
+        
+    except CompanyRegistration.DoesNotExist:
+        return JsonResponse(
+            {'error': 'Only recruiters can access this endpoint'},
+            status=403
+        )
+
+########################################################################## unsaved a candidat from shortlist >> Done
+@api_view(['DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def remove_from_shortlist(request, candidate_id):
+    print("\n=== DELETE FROM SHORTLIST ===")
+    print(f"Candidate ID: {candidate_id}")
+    
+    try:
+        recruiter = CompanyRegistration.objects.get(username=request.user.username)
+        print(f"Recruiter: {recruiter.username}")
+        
+        deleted_count, _ = Shortlist.objects.filter(
+            recruiter=recruiter,
+            candidate_id=candidate_id
+        ).delete()
+        
+        print(f"Deleted {deleted_count} entries")
+        
+        if deleted_count == 0:
+            print("Warning: No matching record found")
+            return JsonResponse({'status': 'not found'}, status=404)
+            
+        return JsonResponse({'status': 'success'})
+        
+    except CompanyRegistration.DoesNotExist:
+        print("Recruiter not found")
+        return JsonResponse({'error': 'Only recruiters can delete candidates'}, status=403)
+        
+    except Exception as e:
+        print("Error:", str(e))
+        return JsonResponse({'error': str(e)}, status=500)
+########################################################################## update job applications status of an job offer X >> Done
+@csrf_exempt
+@require_http_methods(["PUT"])
+def update_application_status(request, job_id, user_id):
+    try:
+        application = JobApplication.objects.get(job_id=job_id, user_id=user_id)
+        data = json.loads(request.body)
+        application.status = data.get('status', application.status)
+        application.save()
+        return JsonResponse({'status': 'success'})
+    except JobApplication.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Application not found'}, status=404)
+########################################################################## Get job applications Number of an job offer X >> Done
+@require_GET
+def job_applications_count(request, job_id):
+    count = JobApplication.objects.filter(job_id=job_id).count()
+    return JsonResponse({'count': count})
+########################################################################## Get job applications of an job offer X >> Done
+@require_GET
+def job_applications(request, job_id):
+    applications = JobApplication.objects.filter(job_id=job_id).select_related('user')
+    
+    data = [{
+        'user_id': app.user.id,
+        'user_name': app.user.full_name,
+        'status': app.status,
+        'application_date': app.application_date.strftime('%Y-%m-%d'),
+    } for app in applications]
+    
+    return JsonResponse(data, safe=False)
 ##########################################################################DELETE job offer created by company X >> Done
 @csrf_exempt
 @require_http_methods(["DELETE"])
@@ -126,6 +231,29 @@ def create_job_offer(request):
     except Exception as e:
         print(f"Error processing job: {str(e)}")
         return JsonResponse({'status': 'error', 'message': 'Internal server error'}, status=500)
+###########################################################################List job offer >> Done
+@require_GET
+def get_jobs(request):
+    try:
+        jobs = Job.objects.all().select_related('company')[:10]  # Limit to 10 for testing
+        jobs_list = []
+        
+        for job in jobs:
+            jobs_list.append({
+                'id': job.id,
+                'title': job.title,
+                'description': job.description,
+                'location': job.location,
+                'salary': str(job.salary) if job.salary else None,  # Convert Decimal to string
+                'working_hours': job.working_hours,
+                'contract_type': job.contract_type,
+                'duration': job.duration,
+
+            })
+            
+        return JsonResponse({'jobs': jobs_list}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 ###########################################################################List job offer posted by company X >> Done
 @require_GET
 def job_list(request):
@@ -181,21 +309,106 @@ def job_details(request, job_id):
         return JsonResponse({'error': 'Job not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-###########################################################################Recommendation
+################################################################################################ Tracking interactions candidat->job offer >>>Done
+"""Ces fonctions Django enregistrent les actions d’un utilisateur (vue, sauvegarde ou candidature) sur une offre 
+d’emploi en créant une entrée dans la base de données via le modèle JobInteraction, et retournent un statut JSON."""
+@csrf_exempt
+@require_POST
 def view_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='VIEW')
-    return JsonResponse({"message": "Job viewed", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting view_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating view interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='VIEW'
+        )
+        
+        print("===== Interaction recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in view_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@csrf_exempt
+@require_POST
 def save_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='SAVE')
-    return JsonResponse({"message": "Job saved", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting save_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating save interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='SAVE'
+        )
+        
+        print("===== Save recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in save_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+
+
+@csrf_exempt
+@require_POST
 def apply_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
-    JobInteraction.objects.create(job=job, user=request.user if request.user.is_authenticated else None, interaction_type='APPLY')
-    return JsonResponse({"message": "Application submitted", "popularity_score": job.popularity_score})
+    print(f"\n===== Starting apply_job endpoint =====")
+    print(f"Received request for job_id: {job_id}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
+    try:
+        user_id = request.user.id if request.user.is_authenticated else None
+        print(f"Creating apply interaction for job {job_id} by user {user_id}")
+        
+        JobInteraction.objects.create(
+            job_id=job_id,
+            user_id=user_id,
+            interaction_type='APPLY'
+        )
+        
+        print("===== Application recorded successfully =====")
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        print(f"\n!!! ERROR in apply_job !!!")
+        print(f"Type: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print("===== Failed =====")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 ###########################################################################Apply to job
 

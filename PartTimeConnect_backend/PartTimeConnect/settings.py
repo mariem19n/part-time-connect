@@ -23,10 +23,10 @@ ALLOWED_HOSTS = [
     '10.0.2.2',
 ]
 
-INSTALLED_APPS = [
+INSTALLED_APPS = ['daphne',
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages',
-    'django.contrib.staticfiles','api','rest_framework','rest_framework.authtoken', 'collab', 'corsheaders','accounts','jobs','feedback',
-    'background_task','django_extensions'
+    'django.contrib.staticfiles','api','rest_framework','rest_framework.authtoken','corsheaders','accounts','jobs','feedback','chat',
+    'collab','background_task','django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -114,6 +114,20 @@ REST_FRAMEWORK = {
     #    'rest_framework.permissions.IsAuthenticated',
     # ]
 }
+
+# Pour indiquer qu'on utilise ASGI
+ASGI_APPLICATION = 'PartTimeConnect.asgi.application'
+
+# Configuration du Channel Layer avec Redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+ALLOWED_HOSTS = ['*']
 
 
 

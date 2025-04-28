@@ -64,6 +64,7 @@ class UserProfile(models.Model):  # Stores additional user details
         if location in self.preferred_locations:
             self.preferred_locations.remove(location)
             self.save()
+            
     about_me = models.TextField(null=True, blank=True)
     skills = models.JSONField(default=list)
     education_certifications = models.JSONField(default=list)
@@ -148,9 +149,22 @@ class UserProfile(models.Model):  # Stores additional user details
         :param job: The job being offered by the recruiter (Job instance).
         :return: A score between 0 and 1 indicating the relevance of the candidate to the job.
         """
+        # Helper function to safely join items that might be strings or dicts
+        def safe_join(items):
+            if not items:  # Handle empty lists
+                return ""
+            return ' '.join(
+                item if isinstance(item, str) else item.get('name', '')
+                for item in items
+            )
+
         # Prepare text data for similarity comparison
-        candidate_profile_text = f"{' '.join(self.skills)} {' '.join(self.education_certifications)} {' '.join(self.languages_spoken)}"
-        job_requirements_text = f"{' '.join(job.requirements)}"
+        candidate_profile_text = " ".join([
+            safe_join(self.skills),
+            safe_join(self.education_certifications),
+            safe_join(self.languages_spoken)
+        ])
+        job_requirements_text = safe_join(job.requirements) if hasattr(job, 'requirements') else ""
 
         # Handle empty text
         if not candidate_profile_text.strip():

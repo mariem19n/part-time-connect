@@ -4,7 +4,6 @@ import '../AppColors.dart';
 
 class MessageBubble extends StatelessWidget {
   final Map<String, dynamic> message;
-  //final Map<dynamic, dynamic> message;
   final bool isMe;
 
   const MessageBubble({

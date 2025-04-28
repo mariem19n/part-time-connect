@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../commun/Pdf_Upload.dart';
 
 class ApplyToJobPage extends StatefulWidget {
   final int jobId;
@@ -18,37 +19,87 @@ class _ApplyToJobPageState extends State<ApplyToJobPage> {
   bool isLoading = true;
   bool isAvailable = true;
   final TextEditingController salaryController = TextEditingController();
-  final TextEditingController messageController = TextEditingController(text: "I am interested in this role and meet the requirements.");
+  final TextEditingController messageController = TextEditingController();
+  bool hasTappedMessage = false; // Pour gérer le premier clic
+
+  String? cvPath;
+  String? coverLetterPath;
 
   @override
   void initState() {
     super.initState();
+    messageController.text = "I am interested in this role and meet the requirements.";
     fetchData();
   }
 
   Future<void> fetchData() async {
-    final jobResponse = await http.get(Uri.parse('http://yourbackend.com/job_details/${widget.jobId}'));
-    final profileResponse = await http.get(Uri.parse('http://yourbackend.com/get_profile/${widget.userId}'));
-
-    if (jobResponse.statusCode == 200 && profileResponse.statusCode == 200) {
-      setState(() {
-        jobDetails = jsonDecode(jobResponse.body);
-        userProfile = jsonDecode(profileResponse.body);
-        isLoading = false;
-      });
+    try {
+      final jobResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/jobs/job-details/${widget.jobId}/'));
+      final profileResponse = await http.get(Uri.parse('http://10.0.2.2:8000/api/get_profile/${widget.userId}/'));
+      if (jobResponse.statusCode == 200 && profileResponse.statusCode == 200) {
+        setState(() {
+          jobDetails = jsonDecode(jobResponse.body);
+          userProfile = jsonDecode(profileResponse.body);
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load job or profile data');
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading data: $e')),
+      );
     }
   }
 
-  Widget buildFileUpload(String label) {
+  Future<void> submitApplication() async {
+    try {
+      final Map<String, dynamic> data = {
+        "user_id": widget.userId,
+        "job_id": widget.jobId,
+        "message": messageController.text,
+        "expected_salary": salaryController.text.isNotEmpty ? double.parse(salaryController.text) : null,
+        "available_now": isAvailable,
+      };
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/apply_to_job/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Application submitted successfully!')),
+        );
+        Navigator.pop(context);
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: ${errorData['error'] ?? 'Unknown error'}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Widget buildFileUpload(String label, Function(String) onSelected) {
     return Column(
       children: [
         Text(label),
         SizedBox(height: 8),
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(border: Border.all(), borderRadius: BorderRadius.circular(8)),
-          child: Icon(Icons.add),
+        PdfUpload(
+          onFilesSelected: (List<String> files) {
+            if (files.isNotEmpty) {
+              onSelected(files[0]);
+            }
+          },
         ),
       ],
     );
@@ -57,7 +108,17 @@ class _ApplyToJobPageState extends State<ApplyToJobPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(title: Text('Apply to Job Offer')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (jobDetails == null || userProfile == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Apply to Job Offer')),
+        body: Center(child: Text("Failed to load job or user data.")),
+      );
     }
 
     return Scaffold(
@@ -66,35 +127,40 @@ class _ApplyToJobPageState extends State<ApplyToJobPage> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            Text("Job Title: ${jobDetails!['title']} - ${jobDetails!['contract_type']}"),
-            Text("Company: ${jobDetails!['company_name']}"),
+            Text("Job Title: ${jobDetails?['title'] ?? 'Unknown'} - ${jobDetails?['contract_type'] ?? ''}"),
+            Text("Company: ${jobDetails?['company_name'] ?? 'Unknown'}"),
             SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text("• ${userProfile!['profile']['full_name']}"),
-                  Text("• ${userProfile!['email']}"),
-                  Text("• ${userProfile!['profile']['phone']}"),
+                  Text("• ${userProfile?['profile']?['full_name'] ?? 'Unknown'}"),
+                  Text("• ${userProfile?['email'] ?? 'Unknown'}"),
+                  Text("• ${userProfile?['profile']?['phone'] ?? 'Unknown'}"),
                 ]),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text("• Salary: \$${jobDetails!['salary']}/hour"),
-                  Text("• Location: ${jobDetails!['location']}"),
-                  Text("• Working Hours: ${jobDetails!['working_hours']}"),
+                  Text("• Salary: \$${jobDetails?['salary'] ?? 'N/A'}/hour"),
+                  Text("• Location: ${jobDetails?['location'] ?? 'N/A'}"),
+                  Text("• Working Hours: ${jobDetails?['working_hours'] ?? 'N/A'}"),
                 ]),
               ],
             ),
-
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                buildFileUpload("Upload Your CV"),
-                buildFileUpload("Upload a Cover Letter"),
+                buildFileUpload("Upload Your CV", (path) {
+                  setState(() {
+                    cvPath = path;
+                  });
+                }),
+                buildFileUpload("Upload a Cover Letter", (path) {
+                  setState(() {
+                    coverLetterPath = path;
+                  });
+                }),
               ],
             ),
-
             SizedBox(height: 20),
             Text("Are you available to start immediately?"),
             Row(
@@ -117,8 +183,7 @@ class _ApplyToJobPageState extends State<ApplyToJobPage> {
                 ),
               ],
             ),
-
-            if (jobDetails!['is_salary_negotiable'] == true)
+            if (jobDetails?['is_salary_negotiable'] == true)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -130,20 +195,28 @@ class _ApplyToJobPageState extends State<ApplyToJobPage> {
                   ),
                 ],
               ),
-
             SizedBox(height: 20),
             Text("Message:"),
             TextField(
               controller: messageController,
               maxLines: 3,
-              decoration: InputDecoration(border: OutlineInputBorder()),
+              onTap: () {
+                if (!hasTappedMessage) {
+                  setState(() {
+                    messageController.clear();
+                    hasTappedMessage = true;
+                  });
+                }
+              },
+              decoration: InputDecoration(
+                hintText: "I am interested in this role",
+                hintStyle: TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(),
+              ),
             ),
-
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Send application to backend (to be implemented)
-              },
+              onPressed: submitApplication,
               child: Text("Submit Application"),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             ),

@@ -45,7 +45,8 @@ class _PdfUploadState extends State<PdfUpload> {
             onTap: _pickPdfFile,
             child: Container(
               height: 150,
-              width: double.infinity,
+              //width: double.infinity,
+              width: 140,
               decoration: BoxDecoration(
                 color: AppColors.secondary,
                 border: Border.all(color:AppColors.primary, width: 2),

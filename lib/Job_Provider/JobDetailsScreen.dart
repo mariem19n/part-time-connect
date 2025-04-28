@@ -5,6 +5,8 @@ import 'job_interaction_service.dart';
 import 'jobfetch_service.dart';
 import '../AppColors.dart';
 import '../auth_helper.dart';
+import '../Job_Seeker/Apply_to_job.dart';
+
 class JobDetailsScreen extends StatefulWidget {
   final int jobId;
 
@@ -149,18 +151,24 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                                     icon: Icon(Icons.assignment_turned_in, color: AppColors.primary),
                                     //onPressed: () => _confirmDelete(context, job.id),
                                     onPressed: () async {
-                                      final result = await JobInteractionService.recordApply(job.id);
-                                      if (result['success'] == true) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Application submitted!')),
+                                      int? userId = await getUserId(); // You already have auth_helper.dart
+                                      if (userId != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ApplyToJobPage(
+                                              jobId: job.id,
+                                              userId: userId,
+                                            ),
+                                          ),
                                         );
                                       } else {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Failed to apply: ${result['message']}')),
+                                          SnackBar(content: Text('You need to be logged in to apply.')),
                                         );
                                       }
                                     },
-                                ),
+                                  ),
                                 ),
                               ],
                             );

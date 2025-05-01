@@ -117,7 +117,7 @@ REST_FRAMEWORK = {
 
 # Pour indiquer qu'on utilise ASGI
 ASGI_APPLICATION = 'PartTimeConnect.asgi.application'
-os.environ['HF_API_TOKEN'] = 'token here'  # Replace with your actual API key or use environment variables 
+os.environ['HF_API_TOKEN'] = config('HF_API_TOKEN') 
 HF_SUMMARY_MODEL = 'mistralai/Mistral-7B-Instruct'  # You can choose different models based on your needs
 
 # Configuration du Channel Layer avec Redis

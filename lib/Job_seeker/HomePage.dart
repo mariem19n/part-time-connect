@@ -22,6 +22,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../commun/ChatbotScreen.dart';
 import 'ProfilePage.dart';
+import '../LLMrecommendation_widgets.dart';
+import 'package:flutter_projects/services/llm_recommendation_service.dart';
+
 
 
 class HomePage extends StatefulWidget {
@@ -33,7 +36,9 @@ class _HomePageState extends State<HomePage> {
   final ApiService apiService = ApiService();
   int _currentIndex = 0;
   final RecommendationService recommendationService = RecommendationService();
+  final LLMRecommendationService llmRecommendationService = LLMRecommendationService(); //mayssen
   late Future<Map<String, dynamic>> _recommendationsFuture;
+  late Future<List<dynamic>> _llmRecommendationsFuture; //mayssen
   final TextEditingController _searchController = TextEditingController();
 
   final JobService jobService = JobService();
@@ -49,6 +54,7 @@ class _HomePageState extends State<HomePage> {
     _loadRecommendations();
     _loadJobs();
     _loadCandidates();
+    _loadAllRecommendations(); //mayssen
   }
 
   void _loadJobs() {
@@ -72,6 +78,19 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
+  //mayssen
+  void _loadAllRecommendations() {
+    final userType = Provider.of<UserRole>(context, listen: false).userType;
+
+    setState(() {
+      _recommendationsFuture = recommendationService.fetchRecommendations(
+        userType == UserType.JobSeeker ? 'JobSeeker' : 'Recruiter',
+      );
+
+      _llmRecommendationsFuture = llmRecommendationService.getRecommendations();
+    });
+  }
+  //mayssen
 
   void _onItemTapped(int index) {
     setState(() {
@@ -141,6 +160,7 @@ class _HomePageState extends State<HomePage> {
         onRefresh: () async {
            _loadRecommendations();
            _loadJobs();
+           _loadAllRecommendations();//mayssen
         },
         child: SingleChildScrollView(
           child: Column(
@@ -239,6 +259,28 @@ class _HomePageState extends State<HomePage> {
                     items: snapshot.data!['preview_items'],
                     type: isJobSeeker ? 'jobs' : 'candidates',
                     onRefresh: _loadRecommendations,
+                  );
+                },
+              ),
+              // LLM Recommendations Section (Mayssen)
+              FutureBuilder(
+                future: _llmRecommendationsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Error loading AI recommendations'),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return SizedBox.shrink();
+                  }
+
+                  return LLMRecommendationPreview(
+                    items: snapshot.data!,
+                    type: isJobSeeker ? 'jobs' : 'candidates',
+                    onRefresh: _loadAllRecommendations,
                   );
                 },
               ),

@@ -5,6 +5,8 @@ import '../Job_seeker/HomePage.dart';
 import '../Job_Provider/PostJobScreen.dart';
 import '../Job_Provider/JobOffersScreen.dart';
 import 'package:flutter_projects/chat/MessagerieScreen.dart';
+import '../Job_seeker/job_application_screen.dart';
+
 
 class NavigationHelper {
   // Navigate based on the index and user role
@@ -69,9 +71,10 @@ class NavigationHelper {
             break;
           case 1: // Search Jobs
             print('  → Navigating to Search Jobs');
-            Navigator.pushNamed(context, '/search-jobs');
-            print('  ✅ Successfully navigated to Search Jobs');
-            break;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => JobApplicationScreen()),
+            );
           case 2: // Messagerie
             print('  → Navigating to Messagerie');
             Navigator.push(

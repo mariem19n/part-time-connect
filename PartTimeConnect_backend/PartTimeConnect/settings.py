@@ -26,7 +26,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = ['daphne',
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages',
     'django.contrib.staticfiles','api','rest_framework','rest_framework.authtoken','corsheaders','accounts','jobs','feedback','chat',
-    'collab','background_task','django_extensions'
+    'collab','background_task','django_extensions','recommendations'
 ]
 
 MIDDLEWARE = [
@@ -117,6 +117,8 @@ REST_FRAMEWORK = {
 
 # Pour indiquer qu'on utilise ASGI
 ASGI_APPLICATION = 'PartTimeConnect.asgi.application'
+os.environ['HF_API_TOKEN'] = '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'  # Replace with your actual API key or use environment variables
+HF_SUMMARY_MODEL = 'mistralai/Mistral-7B-Instruct'  # You can choose different models based on your needs
 
 # Configuration du Channel Layer avec Redis
 CHANNEL_LAYERS = {

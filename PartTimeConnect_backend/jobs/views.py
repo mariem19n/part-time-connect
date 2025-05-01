@@ -19,6 +19,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from .serializers import JobApplicationSerializer
+from rest_framework.views import APIView
+
 ########################################################################## Get saved  candidat from shortlist >> Done
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
@@ -455,3 +458,29 @@ def apply_to_job(request):
         return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+##########################################################
+class UserJobApplicationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Get the UserRegistration instance using the current user's username
+            user_reg = get_object_or_404(UserRegistration, username=request.user.username)
+            
+            # Get the related UserProfile
+            user_profile = get_object_or_404(UserProfile, user=user_reg)
+            
+            # Filter applications by the user's profile
+            applications = JobApplication.objects.filter(user=user_profile)
+            
+            # Serialize the data
+            serializer = JobApplicationSerializer(applications, many=True)
+            return Response(serializer.data)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

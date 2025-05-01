@@ -2,6 +2,8 @@
 from django.urls import path
 from . import views
 from .views import job_list,create_job_offer, delete_job_offer, get_jobs ,view_job, save_job,apply_job,get_shortlisted_candidates , apply_to_job
+from .views import UserJobApplicationsView
+
 
 urlpatterns = [
 
@@ -19,6 +21,7 @@ urlpatterns = [
     path('shortlists/', get_shortlisted_candidates, name='get_shortlisted_candidates'),
     path('shortlists/<int:candidate_id>/', views.remove_from_shortlist, name='remove_from_shortlist'),
     path('api/apply_to_job/', apply_to_job, name='apply_to_job'),
+    path('my-applications/', UserJobApplicationsView.as_view(), name='my-applications'),
 
 
 ]

@@ -11,6 +11,7 @@ urlpatterns = [
     path('rec/', include('popularity_recommendation.urls')),
     path('chat/', include('chat.urls')),
     path('api/collab/', include('collab.urls')),
+    path('api/', include('recommendations.urls')),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

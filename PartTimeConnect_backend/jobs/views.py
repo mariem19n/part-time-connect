@@ -421,7 +421,9 @@ from rest_framework import status
 from accounts.models import UserProfile
 from .models import Job, JobApplication
 import json
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+
 @csrf_exempt
 @api_view(['POST'])
 def apply_to_job(request):
@@ -430,24 +432,25 @@ def apply_to_job(request):
 
         user_id = data.get('user_id')
         job_id = data.get('job_id')
-        message = data.get('message', '')
-        expected_salary = data.get('expected_salary')
-        available_now = data.get('available_now', False)
 
         if not user_id or not job_id:
             return Response({'error': 'user_id and job_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_profile = UserProfile.objects.get(user_id=user_id)  # user_id est le FK vers UserRegistration
+        user_profile = UserProfile.objects.get(user_id=user_id)
         job = Job.objects.get(id=job_id)
+
+        # Vérifier s'il y a déjà une candidature
+        if JobApplication.objects.filter(user=user_profile, job=job).exists():
+            return Response({'error': 'You have already applied to this job.'}, status=status.HTTP_400_BAD_REQUEST)
 
         JobApplication.objects.create(
             user=user_profile,
             job=job,
-            message=message,
-            expected_salary=expected_salary,
-            available_now=available_now,
-            duration=job.duration,  # On prend la durée de l'offre
-            status='Applied'
+            application_date=timezone.now(),
+            duration=job.duration,  # utiliser la durée de l’offre
+            status='Applied',
+            feedback_provided=False,
+            contract_viewed=False,
         )
 
         return Response({'message': 'Application submitted successfully'}, status=status.HTTP_201_CREATED)
@@ -458,6 +461,8 @@ def apply_to_job(request):
         return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
     
 
 ##########################################################

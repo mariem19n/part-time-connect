@@ -36,11 +36,12 @@ Le projet a été développé selon la méthode **Agile Scrum** avec une planifi
 ## 🧠 🔍 Systèmes de Recommandation Intelligents
 
 Notre application intègre une approche hybride combinant plusieurs algorithmes pour maximiser la pertinence des offres proposées :
-🔗 Filtrage Collaboratif : recommande des emplois en se basant sur les interactions similaires entre utilisateurs.
-🧾 Filtrage Basé sur le Contenu : analyse les compétences, préférences et expériences des utilisateurs pour proposer des offres compatibles.
-📈 Système de Popularité : met en avant les offres les plus consultées ou les plus sollicitées.
-🧠 Algorithmes de Traitement du Langage Naturel (NLP) : permettent à l’assistant virtuel de comprendre les intentions des utilisateurs et d’adapter les recommandations en temps réel.
-🎯 Objectif : réduire le temps de recherche d’emploi et augmenter la pertinence des propositions.
+
+* 🔗 Filtrage Collaboratif : recommande des emplois en se basant sur les interactions similaires entre utilisateurs.
+* 🧾 Filtrage Basé sur le Contenu : analyse les compétences, préférences et expériences des utilisateurs pour proposer des offres compatibles.
+* 📈 Système de Popularité : met en avant les offres les plus consultées ou les plus sollicitées.
+* 🧠 Algorithmes de Traitement du Langage Naturel (NLP) : permettent à l’assistant virtuel de comprendre les intentions des utilisateurs et d’adapter les recommandations en temps réel.
+* 🎯 Objectif : réduire le temps de recherche d’emploi et augmenter la pertinence des propositions.
 
 ## 🎥 Demo Video
 Watch the final result of the Part-Time Connect app in action:

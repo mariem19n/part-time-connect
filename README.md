@@ -44,8 +44,10 @@ Notre application intègre une approche hybride combinant plusieurs algorithmes 
 * 🎯 Objectif : réduire le temps de recherche d’emploi et augmenter la pertinence des propositions.
 
 ## 🎥 Demo Video
-Watch the final result of the Part-Time Connect app in action:
-📽️ Click here to watch the demo
+
+Watch the final result of the **Part-Time Connect** app in action:  
+📽️ [Click here to watch the demo](https://drive.google.com/file/d/1B1PgUe6reU7zBKB201EYYbr9Fq9x63E-/view?usp=drive_link)
+
 
 ## 👨‍💻 Équipe
 
